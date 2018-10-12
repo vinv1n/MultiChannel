@@ -1,5 +1,7 @@
-import flask
+from flask import Flask
+from flask import Response
+from flask_restful import Api, Resource
 
 
-
-app = flask.Flask(__name__)
+app = Flask(__name__)
+api = Api(app)
