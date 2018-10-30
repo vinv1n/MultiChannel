@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_restful import Api
 
 # resources
@@ -8,6 +8,9 @@ from app.resources.users import Users
 
 def create_app():
     """
+    Creates and configures flask api and app.
+    Adds resources defined in app.resources.
+
     :return: preconfigured api
     """
 
