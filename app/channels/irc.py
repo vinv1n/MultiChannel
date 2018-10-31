@@ -48,12 +48,18 @@ class IRC:
             self.socket.send("NICK {}\n".format(self.nickname).encode("utf-8"))
 
             if self.default_channels:
-                self.socket.send("JOIN {}\n".format(self.default_channels).encode("utf-8"))
+                self._join_channels(self.default_channels)
 
             return True  # connection was succesful
         except Exception as e:
             print("Error during connection. Error {}".format(e))
             return False
+
+    def _join_channels(self, channels):
+        for channel in channels:
+            if channel not in self.default_channels:
+                self.socket.send("JOIN {}\n".format(channel).encode("utf-8"))
+                self.default_channels.append(channel)
 
     def _response_to_ping(self, msg):
         """
@@ -71,6 +77,9 @@ class IRC:
         """
         return self.running
 
+    def get_channels(self):
+        return self.default_channels
+
     @staticmethod
     def _parse_message(message):
         """
@@ -79,14 +88,35 @@ class IRC:
         :param message: message to be parsed
         :return: parsed message string
         """
-        return None
+        return ""
 
     def send_message_to_channel(self, channels, msg):
-        # Db entry should be made here
-        return None
+
+        parsed_message = IRC._parse_message(msg)
+
+        for channel in channels:
+            if channel not in self.default_channels:
+                self._join_channels([channel])
+
+            self.socket.sendall("PRIVMSG {} {}\r\n".format(channel, parsed_message).encode("utf-8"))
+
+        # TODO add db entry and error handling
+        return True
 
     def send_message_to_user(self, users, msg):
-        return None
+        """
+        Sents message to to all selected users.
+
+        :param users: List of users that message should be sent
+        :param msg: Message which will be sent
+        """
+        parsed_message = IRC._parse_message(msg)
+
+        for user in users:
+            self.socket.sendall("PRIVMSG {} {}\r\n".format(user, parsed_message).encode("utf-8"))
+
+        # TODO add db entry and error handling
+        return True
 
     def receive_message(self):
         """
