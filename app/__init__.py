@@ -3,7 +3,7 @@ from flask_restful import Api
 
 # resources
 # TODO: Rename resource files/classes
-from app.resources.users import Users
+from app.resources.users import Users, UsersSingle
 
 
 def create_app():
@@ -21,5 +21,6 @@ def create_app():
 
     # Add resources here
     api.add_resource(Users, "/users")
+    api.add_resource(UsersSingle, "/users/<string:user_id>")
 
     return app
