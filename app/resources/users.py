@@ -13,7 +13,7 @@ class Users(Resource):
 
     @staticmethod
     def get():
-        return {"man": 200}
+        return {}
 
     @staticmethod
     def post():
