@@ -1,6 +1,9 @@
 from flask import Flask, render_template
 from flask_restful import Api
 
+# views for frontend stuff
+from app.views.index import index
+
 # resources
 # TODO: Rename resource files/classes
 from app.resources.users import Users, UsersSingle
@@ -19,6 +22,9 @@ def create_app():
 
     # Environment configuration
     app.config.from_object("config")
+
+    # views rules
+    app.add_url_rule(rule="/", endpoint="index", view_func=index)
 
     # Blueprints could be used?
     api = Api(app)
