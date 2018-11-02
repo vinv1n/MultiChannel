@@ -52,7 +52,7 @@ class IRC:
 
             return True  # connection was succesful
         except Exception as e:
-            print("Error during connection. Error {}".format(e))
+            log.critical("Error during connection. Error %s", e)
             return False
 
     def _join_channels(self, channels):
@@ -129,6 +129,7 @@ class IRC:
         data = self.socket.recv(4096).decode('utf-8').split('\r\n')
         if log.isEnabledFor(logging.DEBUG):
             log.debug("%s", pprint.pformat(data))
+        log.warning(data)
         if "PING" in data:
             self._response_to_ping(data)
             return data
@@ -151,5 +152,5 @@ class IRC:
         self.running = True
         while self.running:
             msg = self.receive_message()
-            log.info(msg)
+            log.warning(msg)
 

@@ -1,4 +1,6 @@
 import logging
+import threading
+
 from flask import Flask, render_template
 from flask_restful import Api
 
@@ -52,6 +54,7 @@ def create_app():
 
     # init channels
     Channels()
+    logger.warning("Init channels is done")
 
     return app
 
@@ -62,7 +65,8 @@ class Channels:
     """
     def __init__(self):
         # define server address
-        self.irc = self.init_irc()
+        # spawn threads
+        threading.Thread(target=self.init_irc).start()
 
     def init_irc(self):
         irc = IRC(nickname="Botvinvin")
