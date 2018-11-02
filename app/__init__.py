@@ -1,13 +1,18 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_restful import Api
 
 # resources
 # TODO: Rename resource files/classes
+from app.resources.users import Users
+from app.resources.messages import Messages, MessageSingle, MessageSeen
 from app.resources.users import Users, UsersSingle
 
 
 def create_app():
     """
+    Creates and configures flask api and app.
+    Adds resources defined in app.resources.
+
     :return: preconfigured api
     """
 
@@ -21,6 +26,10 @@ def create_app():
 
     # Add resources here
     api.add_resource(Users, "/users")
+
+    api.add_resource(Messages, "/messages")
+    api.add_resource(MessageSingle, "/messages/<string:message_id>")
+    api.add_resource(MessageSeen, "/messages/<string:message_id>/<string:seen_id>")
     api.add_resource(UsersSingle, "/users/<string:user_id>")
 
     return app
