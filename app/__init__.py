@@ -1,5 +1,7 @@
+import logging
 from flask import Flask, render_template
 from flask_restful import Api
+
 
 # views for frontend stuff
 from app.views.index import index
@@ -8,6 +10,17 @@ from app.views.index import index
 # TODO: Rename resource files/classes
 from app.resources.users import Users, UsersSingle
 from app.resources.messages import Messages, MessageSingle, MessageSeen
+
+# channels
+from app.channels.irc import IRC
+
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+formatter = logging.Formatter(
+        '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')  # TODO reformat
+handler.setFormatter(formatter)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 
 def create_app():
@@ -37,4 +50,21 @@ def create_app():
     api.add_resource(MessageSeen, "/messages/<string:message_id>/<string:seen_id>")
     api.add_resource(UsersSingle, "/users/<string:user_id>")
 
+    # init channels
+    Channels()
+
     return app
+
+
+class Channels:
+    """
+    Creates instances of channels
+    """
+    def __init__(self):
+        # define server address
+        self.irc = self.init_irc()
+
+    def init_irc(self):
+        irc = IRC(nickname="Botvinvin")
+        irc.run()
+        return irc

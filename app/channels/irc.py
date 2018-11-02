@@ -1,22 +1,23 @@
 import socket
 import json
 import logging
+import pprint
 
 from socket import AF_INET, SOCK_STREAM
+
+log = logging.getLogger(__name__)
 
 
 class IRC:
 
-    def __init__(self, address, channels=None, nickname=None):
+    def __init__(self, channels=None, nickname=None):
         self.running = False
         self.database = None  #database to save messages
 
         # connection
         self.socket = socket.socket(AF_INET, SOCK_STREAM)
         self.port = 6667
-        self.server = "IRCnet"
-        self.address = address
-        self.host = "IRC"
+        self.address = "irc.nebula.fi"
 
         # Bot's credentials
         if nickname:  # bot's nick
@@ -24,14 +25,13 @@ class IRC:
         else:
             self.nickname = "MultiChannelBot"  # default
 
-        self.user = [""]  # user of server
-        self.realname = "MultiChannelBot"
+        self.bot_name = "MultiChannelBot"  # used for realname and username
 
         # channels that bot is joined
         if channels:
             self.default_channels = channels
         else:
-            self.default_channels = []
+            self.default_channels = ["#vinvin.bot"]  # FIXME
 
     def connect_to_server(self):
         """
@@ -41,14 +41,14 @@ class IRC:
         """
         try:
             self.socket.connect((self.address, self.port))
-
             # login to server
-            self.socket.send("USER {} a a {}\r\n".format(self.user, self.realname).encode("utf-8"))
+            self.socket.send("USER {} a a {}\r\n".format(self.bot_name, self.bot_name).encode("utf-8"))
             # define nick
-            self.socket.send("NICK {}\n".format(self.nickname).encode("utf-8"))
+            self.socket.send("NICK {}\r\n".format(self.nickname).encode("utf-8"))
 
-            if self.default_channels:
-                self._join_channels(self.default_channels)
+            #if self.default_channels:
+            #    self._join_channels(self.default_channels)
+            self.socket.send("JOIN {}\r\n".format(self.default_channels[0]).encode("utf-8"))
 
             return True  # connection was succesful
         except Exception as e:
@@ -127,8 +127,11 @@ class IRC:
         # TODO check if there is better format for the messages
         # also other response handling probably should be done here
         data = self.socket.recv(4096).decode('utf-8').split('\r\n')
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug("%s", pprint.pformat(data))
         if "PING" in data:
             self._response_to_ping(data)
+            return data
 
         return data
 
@@ -144,7 +147,9 @@ class IRC:
     def run(self):
         """
         """
+        self.connect_to_server()
         self.running = True
         while self.running:
             msg = self.receive_message()
+            log.info(msg)
 
