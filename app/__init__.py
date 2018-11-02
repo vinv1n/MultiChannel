@@ -3,9 +3,8 @@ from flask_restful import Api
 
 # resources
 # TODO: Rename resource files/classes
-from app.resources.users import Users
-from app.resources.messages import Messages, MessageSingle, MessageSeen
 from app.resources.users import Users, UsersSingle
+from app.resources.messages import Messages, MessageSingle, MessageSeen
 
 
 def create_app():

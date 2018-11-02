@@ -1,7 +1,3 @@
-"""
-Messages resource class.
-"""
-
 from flask import request
 from flask_restful import Resource
 
@@ -30,7 +26,7 @@ class Messages(Resource):
         return {}, 201
 
 
-class MessageSinge(Resource):
+class MessageSingle(Resource):
     """
     For handling single messages in database.
     """
