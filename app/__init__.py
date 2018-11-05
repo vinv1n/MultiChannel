@@ -1,5 +1,5 @@
 import logging
-import threading
+import threading, queue
 
 from flask import Flask, render_template
 from flask_restful import Api
@@ -14,7 +14,7 @@ from app.resources.users import Users, UsersSingle
 from app.resources.messages import Messages, MessageSingle, MessageSeen
 
 # channels
-from app.channels.irc import IRC
+from app.channels.irc import IRC, run_irc
 
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
@@ -66,9 +66,5 @@ class Channels:
     def __init__(self):
         # define server address
         # spawn threads
-        threading.Thread(target=self.init_irc).start()
-
-    def init_irc(self):
-        irc = IRC(nickname="Botvinvin")
-        irc.run()
-        return irc
+        self.queue = queue.Queue()
+        threading.Thread(target=run_irc, args=self.queue).start()

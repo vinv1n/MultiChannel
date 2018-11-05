@@ -145,12 +145,13 @@ class IRC:
         """
         return None
 
-    def run(self):
-        """
-        """
-        self.connect_to_server()
-        self.running = True
-        while self.running:
-            msg = self.receive_message()
-            log.warning(msg)
+def run_irc(nickname=None, channels=None, *args, **kwargs):
+    """
+    """
 
+    irc = IRC(channels=channels, nickname=nickname)
+    irc.connect_to_server()
+    irc.running = True
+    while irc.running:
+        msg = irc.receive_message()
+        log.warning(msg)
