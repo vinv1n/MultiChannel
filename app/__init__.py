@@ -25,7 +25,7 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
-def create_app():
+def create_app(args):
     """
     Creates and configures flask api and app.
     Adds resources defined in app.resources.
@@ -52,8 +52,9 @@ def create_app():
     api.add_resource(MessageSeen, "/messages/<string:message_id>/<string:seen_id>")
     api.add_resource(UsersSingle, "/users/<string:user_id>")
 
-    # init channels
-    Channels()
+    if not args.disable_bots:
+        Channels()
+
     logger.warning("Init channels is done")
 
     return app
@@ -67,4 +68,8 @@ class Channels:
         # define server address
         # spawn threads
         self.queue = queue.Queue()
-        threading.Thread(target=run_irc, args=self.queue).start()
+        self.irc_thread = threading.Thread(target=run_irc)
+
+    def run_threads(self):
+        # run all therads for bots
+        self.irc_thread.start()

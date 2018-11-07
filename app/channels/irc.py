@@ -145,7 +145,7 @@ class IRC:
         """
         return None
 
-def run_irc(nickname=None, channels=None, *args, **kwargs):
+def run_irc(nickname=None, channels=None):
     """
     """
 
@@ -154,4 +154,3 @@ def run_irc(nickname=None, channels=None, *args, **kwargs):
     irc.running = True
     while irc.running:
         msg = irc.receive_message()
-        log.warning(msg)
