@@ -49,7 +49,6 @@ class IRC:
             #if self.default_channels:
             #    self._join_channels(self.default_channels)
             self.socket.send("JOIN {}\r\n".format(self.default_channels[0]).encode("utf-8"))
-            log.warning("Logging done")
 
             return True  # connection was succesful
         except Exception as e:
@@ -130,7 +129,6 @@ class IRC:
         data = self.socket.recv(4096).decode('utf-8').split('\r\n')
         if log.isEnabledFor(logging.DEBUG):
             log.debug("%s", pprint.pformat(data))
-        log.warning(data)
         if "PING" in data:
             self._response_to_ping(data)
             return data
@@ -146,6 +144,9 @@ class IRC:
         """
         return None
 
+    def handle_incoming_messages(self, msg):
+        pass
+
 def run_irc(nickname=None, channels=None):
     """
     """
@@ -155,4 +156,3 @@ def run_irc(nickname=None, channels=None):
     irc.running = True
     while irc.running:
         msg = irc.receive_message()
-        log.warning(msg)

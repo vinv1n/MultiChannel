@@ -18,12 +18,6 @@ from app.channels.irc import IRC, run_irc
 from app.database.db_handler import database_handler
 
 logger = logging.getLogger(__name__)
-handler = logging.StreamHandler()
-formatter = logging.Formatter(
-        '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')  # TODO reformat
-handler.setFormatter(formatter)
-handler.setLevel(logging.DEBUG)
-logger.addHandler(handler)
 
 
 def create_app(args):
@@ -55,7 +49,6 @@ def create_app(args):
 
     #if not args.disable_bots:
     Channels()
-    logger.warning(database_handler().get_messages())
 
     logger.warning("Init channels is done")
 
