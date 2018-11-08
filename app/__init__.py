@@ -15,6 +15,7 @@ from app.resources.messages import Messages, MessageSingle, MessageSeen
 
 # channels
 from app.channels.irc import IRC, run_irc
+from app.database.db_handler import database_handler
 
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
@@ -52,8 +53,9 @@ def create_app(args):
     api.add_resource(MessageSeen, "/messages/<string:message_id>/<string:seen_id>")
     api.add_resource(UsersSingle, "/users/<string:user_id>")
 
-    if not args.disable_bots:
-        Channels()
+    #if not args.disable_bots:
+    Channels()
+    logger.warning(database_handler().get_messages())
 
     logger.warning("Init channels is done")
 
@@ -68,8 +70,4 @@ class Channels:
         # define server address
         # spawn threads
         self.queue = queue.Queue()
-        self.irc_thread = threading.Thread(target=run_irc)
-
-    def run_threads(self):
-        # run all therads for bots
-        self.irc_thread.start()
+        threading.Thread(target=run_irc).start()
