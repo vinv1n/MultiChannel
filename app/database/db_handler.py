@@ -1,4 +1,4 @@
-from db import Mongo
+from app.database.db import Mongo
 import json
 
 

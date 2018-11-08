@@ -7,7 +7,7 @@ class Mongo:
     """
     def __init__(self, database_name):
         # FIXME change localhost to something else
-        self.client = pymongo.MongoClient(host="localhost", port=27017)
+        self.client = pymongo.MongoClient(host="0.0.0.0", port=27017)
 
         #Default collections
         self.user_collection = None

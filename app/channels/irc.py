@@ -49,6 +49,7 @@ class IRC:
             #if self.default_channels:
             #    self._join_channels(self.default_channels)
             self.socket.send("JOIN {}\r\n".format(self.default_channels[0]).encode("utf-8"))
+            log.warning("Logging done")
 
             return True  # connection was succesful
         except Exception as e:
@@ -154,3 +155,4 @@ def run_irc(nickname=None, channels=None):
     irc.running = True
     while irc.running:
         msg = irc.receive_message()
+        log.warning(msg)
