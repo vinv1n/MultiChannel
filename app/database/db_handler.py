@@ -69,7 +69,7 @@ class database_handler:
         """
         :return: list of message IDs.
         """
-        return self.database.message_collection.distinct()
+        return self.database.message_collection.find()
 
     def get_message(self, message_id):
         """

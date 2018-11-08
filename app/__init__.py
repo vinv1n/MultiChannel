@@ -55,6 +55,7 @@ def create_app(args):
 
     #if not args.disable_bots:
     Channels()
+    logger.warning(database_handler().get_messages())
 
     logger.warning("Init channels is done")
 
