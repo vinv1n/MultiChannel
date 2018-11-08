@@ -6,10 +6,10 @@
  # How to:
   ## Docker
    ### 1. **clone project**
-   ### 2. **Install docker** https://www.docker.com/get-started
+   ### 2. **Install docker and docker-compose** https://www.docker.com/get-started
    ### 3. **go to project root**
-   ### 4. run `docker build -t multichannel .`
-   ### 5. run `docker run -p 5000:5000 -t multichannel:latest`
+   ### 4. run on linux `sudo docker-compose build`
+   ### 5. run `docker-compose up`
    ### 6. ???
    ### 7. Profit
    ### 8. -> http://0.0.0.0:5000
