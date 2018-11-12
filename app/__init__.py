@@ -18,6 +18,7 @@ from app.channels.irc import IRC, run_irc
 from app.database.db_handler import database_handler
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def create_app(args):
@@ -49,6 +50,7 @@ def create_app(args):
 
     #if not args.disable_bots:
     Channels()
+    #database_handler()
 
     logger.warning("Init channels is done")
 

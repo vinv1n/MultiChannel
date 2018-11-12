@@ -1,21 +1,30 @@
-version: '3'
+version: '3.3'
 
 services:
   api:
     build: .
     ports:
       - 5000:5000
+    volumes:
+      - ./data/mongo:/data/db
     links:
-      - "mongo"
+      - mongo
     depends_on:
-      - "mongo"
+      - mongo
+    networks:
+      - backend
 
   mongo:
     image: "mongo:latest"
     volumes:
-      - ./data/db
+      - ./data/mongo:/data/db
     ports:
-      - 27017:27017
+      - 27018:27017
+    networks:
+      - backend
 
-volumes:
-  db-data:
+    command: mongod --ipv6 --noauth
+
+networks:
+  backend:
+    driver: "bridge"

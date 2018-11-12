@@ -1,6 +1,9 @@
-from app.database.db import Mongo
 import json
+import logging
 
+from app.database.db import Mongo
+
+logger = logging.getLogger(__name__)
 
 class database_handler:
     """
@@ -41,8 +44,10 @@ class database_handler:
         """
         try:
             id_ = self.database.user_collection.insert_one(user_data).inserted_id
+            logger.warning(id_)
             return id_
-        except Exception:
+        except Exception as e:
+            logger.critical("Error during data handling. Error: %s", e)
             return None
 
     def update_user(self, user_info, user_id):
@@ -109,8 +114,9 @@ class database_handler:
         :param string user_id: the ID of the user who has seen the message.
         :return: True if the operation was successful, False otherwise.
         """
-        """
-        Message sctructure?
+
+        '''
+        Message sctructure
         message = {
             "_id": id,
             "content": str,
@@ -123,7 +129,7 @@ class database_handler:
             }
         }
 
-        """
+        '''
         # needs to be decided if user has messages or message have users
         message = self.database.message_collection.find_one(filter={'_id': message_id})
 
