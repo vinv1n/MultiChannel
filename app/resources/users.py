@@ -1,10 +1,12 @@
+import json
+
 from flask_restful import Resource
 
 """"
 Users resource class. This class should handle everything
 related to users. Trys to keep __init__.py clean.
 """
-
+from app.database.db_handler import database_handler
 
 class Users(Resource):
     """
@@ -13,7 +15,8 @@ class Users(Resource):
 
     @staticmethod
     def get():
-        return {}
+        p = database_handler().create_user({"foo": "bar"})
+        return {"foo": str(p)}
 
     @staticmethod
     def post():

@@ -1,13 +1,19 @@
 import pymongo
+import logging
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class Mongo:
     """
     Class for handling database
     """
     def __init__(self, database_name):
+
+        logger.critical("Initializing database")
         # FIXME change localhost to something else
-        self.client = pymongo.MongoClient(host="0.0.0.0", port=27017)
+        self.client = pymongo.MongoClient(host="mongo:27017")
+        logger.critical(self.client)
 
         #Default collections
         self.user_collection = None
