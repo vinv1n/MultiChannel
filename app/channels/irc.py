@@ -2,22 +2,29 @@ import socket
 import json
 import logging
 import pprint
+import os
 
-from socket import AF_INET, SOCK_STREAM
+from socket import AF_INET, SOCK_STREAM, AF_INET6
+from app.database.db_handler import database_handler
+
 
 log = logging.getLogger(__name__)
 
 
 class IRC:
 
-    def __init__(self, channels=None, nickname=None):
+    def __init__(self, queue_in, queue_out, channels=None, nickname=None):
         self.running = False
-        self.database = None  #database to save messages
+        self.database = database_handler()  # FIXME
 
         # connection
         self.socket = socket.socket(AF_INET, SOCK_STREAM)
         self.port = 6667
         self.address = "irc.nebula.fi"
+
+        # queues to comminicate outside of thread
+        self.queue_in = queue_in
+        self.queue_out = queue_out
 
         # Bot's credentials
         if nickname:  # bot's nick
@@ -26,6 +33,8 @@ class IRC:
             self.nickname = "MultiChannelBot"  # default
 
         self.bot_name = "MultiChannelBot"  # used for realname and username
+
+        self.commands = self._setup_commands()
 
         # channels that bot is joined
         if channels:
@@ -46,8 +55,7 @@ class IRC:
             # define nick
             self.socket.send("NICK {}\r\n".format(self.nickname).encode("utf-8"))
 
-            #if self.default_channels:
-            #    self._join_channels(self.default_channels)
+            #self._join_channels()
             self.socket.send("JOIN {}\r\n".format(self.default_channels[0]).encode("utf-8"))
 
             return True  # connection was succesful
@@ -55,11 +63,12 @@ class IRC:
             log.critical("Error during connection. Error %s", e)
             return False
 
-    def _join_channels(self, channels):
+    def _join_channels(self, channels=None):
+        if not channels:
+            channels = self.default_channels
         for channel in channels:
-            if channel not in self.default_channels:
-                self.socket.send("JOIN {}\n".format(channel).encode("utf-8"))
-                self.default_channels.append(channel)
+            self.socket.send("JOIN {}\r\n".format(channel).encode("utf-8"))
+            self.default_channels.append(channel)
 
     def _response_to_ping(self, msg):
         """
@@ -67,7 +76,7 @@ class IRC:
 
         :param msg: Received message
         """
-        self.socket.send("PONG {}\r\n".format(msg[1]).encode('utf-8'))
+        self.socket.send("PONG {}\r\n".format(msg).encode('utf-8'))
 
     def is_running(self):
         """
@@ -80,8 +89,158 @@ class IRC:
     def get_channels(self):
         return self.default_channels
 
+    def send_message(self, users, msg):
+        """
+        Sents message to to all selected users.
+
+        :param users: List of users that message should be sent. In case of channel list containing channel name
+        :param msg: Message which will be sent
+        :return: True if message is sent succesfully otherwise False
+        """
+        try:
+            for user in users:
+                if not isinstance(user, str):  # ensure that users are strings
+                    user = str(user)
+                self.socket.send("PRIVMSG {} :{:}\r\n".format(user, msg).encode('utf-8'))
+
+            self._make_queue_entry({"users": users, "message":msg})
+            return True
+        except (socket.error, TypeError, AttributeError, ValueError) as e:
+            log.critical("Error during senting message. Error: %s", e)
+            return False
+
+    def _get_messgae_data(self):
+        data = self.socket.recv(4096).decode('utf-8').strip('\r\n')
+        return data
+
+    def receive_messages(self):
+        """
+        Catches messages that are sent to the bot
+
+        :return: received message data
+        """
+        # TODO check if there is better format for the messages
+        # also other response handling probably should be done here
+        data = self._get_messgae_data()
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug("%s", pprint.pformat(data))
+
+        if "PING" in data:
+            self._response_to_ping(data)
+        else:
+            self.handle_incoming_messages(data=data)
+
+    def _determine_if_msg_recived(self, user, message_id):
+        """
+        Determines if user has received the message.
+
+        :param users: users that message has been sent
+        :return: None if server doesn't support idle, otherwise boolean True if message is seen or False if not seen.
+        """
+        self.socket.send(("WHOIS {}\r\n").format("vinvin").encode('utf-8'))
+        data = self._get_messgae_data()
+        if "IDLE" not in data:
+            log.warning("Server does not show idle")
+            return None
+
+        idle_time = MessageParser.parse_idle_time(data)
+        # we need messages timestamp to compare login time and sent time
+        msg = self.database.get_message(message_id=message_id)  # FIXME
+        msg_timestamp = msg.get('timestamp')
+        if idle_time <= msg_timestamp:
+            self.database.mark_message_seen(user, message_id)
+            return True
+
+        return False
+
+    def handle_incoming_messages(self, data, seen=False):
+        result_dict = MessageParser.parse_incoming_messages(data, self.commands)
+        command = result_dict.get("command")
+        if command:
+            command(result_dict)
+
+
+    def handle_response(self):
+        pass
+
+    def print_help(self, parse_result):
+        """
+        """
+        #result_dict = MessageParser.parse_incoming_messages(message=msg)
+        message = "Bot commands are: {}".format(" ".join(self.commands.keys()))
+        self.send_message(users=[parse_result.get("channel")], msg=message)
+
+    def _setup_commands(self):
+        """
+        """
+        commands = {
+            "!response": self.handle_response,  # handles aswers from user
+            "!help": self.print_help
+        }
+        return commands
+
+    def _make_queue_entry(self, data):
+        """
+        """
+        try:
+            self.queue_out.put(data)
+        except Exception as e:
+            log.critical("Data cannot be queued. Error %s", e)
+            return False
+        return True
+
+    def _get_queue_item(self):
+        if self.queue_in.empty():
+            return None
+
+        data = self.queue_in.get(timeout=10)
+        if data:
+            return data
+        return None
+
+    def handle_queue(self, data):
+        """
+        Handles queue and checks what kind of operations needs to be done.
+
+        :param data: A dict containing operation type and needed information
+        """
+        entry_type = data.get("type")
+        if entry_type == "message":
+            message = data.get("message")
+            users = data.get("users")
+            msg = MessageParser.parse_outgoing_message(message=message)  # parse message string to me correct format
+
+            status = self.send_message(users=users, msg=message)
+
+        elif entry_type == "status":
+            # do da handling in api
+            message_id = data.get("message_id")
+            users = data.get("user")
+            self._determine_if_msg_recived(user=users, message_id=message_id)
+
+
+def run_irc(queue_in, queue_out):
+    """
+    Method to run irc bot.
+    """
+    irc = IRC(queue_in=queue_in, queue_out=queue_out)
+    irc.connect_to_server()
+    irc.running = True
+    log.info("IRC bot is running")
+    while irc.running:
+        data = irc._get_queue_item()
+        if data:
+            irc.handle_queue(data)
+        irc.receive_messages()
+
+
+class MessageParser:
+    """
+    Parser for incoming and outgoing messages
+    """
+
     @staticmethod
-    def _parse_message(message):
+    def parse_outgoing_messages(message):
         """
         Parses massege body and makes is correct format for irc.
 
@@ -90,69 +249,55 @@ class IRC:
         """
         return ""
 
-    def send_message_to_channel(self, channels, msg):
-
-        parsed_message = IRC._parse_message(msg)
-
-        for channel in channels:
-            if channel not in self.default_channels:
-                self._join_channels([channel])
-
-            self.socket.sendall("PRIVMSG {} {}\r\n".format(channel, parsed_message).encode("utf-8"))
-
-        # TODO add db entry and error handling
-        return True
-
-    def send_message_to_user(self, users, msg):
+    @staticmethod
+    def parse_incoming_messages(message, commands):
         """
-        Sents message to to all selected users.
+        Parser for messages that are sent to the bot.
 
-        :param users: List of users that message should be sent
-        :param msg: Message which will be sent
+        :param message: A list containing message data
+        :return: A dict with used channel and message string
         """
-        parsed_message = IRC._parse_message(msg)
 
-        for user in users:
-            self.socket.sendall("PRIVMSG {} {}\r\n".format(user, parsed_message).encode("utf-8"))
+        parse_result = {
+            "message": "",
+            "command": None,
+            "channel": MessageParser._get_channel(message=message),
+            "sender": MessageParser._get_sender(message=message)
+        }
+        try:
+            msg = message.split(':')[-1]
+            command = commands.get(msg)
+            if command:
+                parse_result['command'] = command
+            parse_result['message'] = msg
 
-        # TODO add db entry and error handling
-        return True
+        except (IndexError, TypeError) as e:
+            log.debug("Error during message parsing. Error: %s", e)
+            return parse_result
 
-    def receive_message(self):
-        """
-        Catches messages that are sent to the bot
+        return parse_result
 
-        :return: received message data
-        """
-        # TODO check if there is better format for the messages
-        # also other response handling probably should be done here
-        data = self.socket.recv(4096).decode('utf-8').split('\r\n')
-        if log.isEnabledFor(logging.DEBUG):
-            log.debug("%s", pprint.pformat(data))
-        if "PING" in data:
-            self._response_to_ping(data)
-            return data
+    @staticmethod
+    def _get_sender(message):
+        try:
+            sender = message.split("!")[0].strip(":")
+            return sender
+        except IndexError:
+            log.debug("Sender could not be parsed")
 
-        return data
+        return ""
 
-    def _determine_if_msg_recived(self, users):
-        """
-        Determines if user has received the message.
+    @staticmethod
+    def _get_channel(message):
+        try:
+            channel = message.split("PRIVMSG")[1].split("!")[0].strip(":").strip()
+            if channel.find("MultiChannelBot") == -1:
+                return channel
+            return MessageParser._get_sender(message=message)
+        except (IndexError, TypeError, AttributeError) as e:
+            log.debug("Channel could nei be parsed from message")
+        return ""
 
-        :param users: users that message has been sent
-        :return: dict containing user status
-        """
-        return None
-
-    def handle_incoming_messages(self, msg):
-        pass
-
-def run_irc(nickname=None, channels=None):
-    """
-    """
-
-    irc = IRC(channels=channels, nickname=nickname)
-    irc.connect_to_server()
-    irc.running = True
-    while irc.running:
-        msg = irc.receive_message()
+    @staticmethod
+    def parse_idle_time(message):
+        return ""

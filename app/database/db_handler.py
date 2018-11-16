@@ -113,14 +113,13 @@ class database_handler:
         :param string message_id: the ID of the seen message.
         :param string user_id: the ID of the user who has seen the message.
         :return: True if the operation was successful, False otherwise.
-        """
 
-        '''
         Message sctructure
         message = {
             "_id": id,
             "content": str,
             "sender": str,
+            "timestamp": timestamp
             "sent_to": {
                 user_id: {
                     "seen": bool,
@@ -129,7 +128,8 @@ class database_handler:
             }
         }
 
-        '''
+        """
+
         # needs to be decided if user has messages or message have users
         message = self.database.message_collection.find_one(filter={'_id': message_id})
 
