@@ -2,6 +2,7 @@ import json
 import logging
 
 from app.database.db import Mongo
+from bson.objectid import ObjectId
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,18 @@ class database_handler:
         """
         :return: list of user IDs.
         """
-        return self.database.user_collection.distinct()
+        try:
+            envelope = []
+            cursor =  self.database.user_collection.find({ })
+            for item in cursor:
+                user = {}
+                for key in item:
+                    user.update({ key : str(item[key]) }) 
+                envelope.append(user)
+            return envelope
+        except Exception as e:
+            logger.critical("Error during data handling. Error: %s", e)
+            return None
 
     def get_user(self, user_id):
         """
@@ -33,7 +45,17 @@ class database_handler:
         :param string user_id: the ID of the user.
         :return: the user data as a dictionary.
         """
-        return self.database.user_collection.find_one(filter={'_id': user_id})
+        try:
+            cursor =  self.database.user_collection.find({'_id': ObjectId(user_id)})
+            
+            for item in cursor:
+                user = {}
+                for key in item:
+                    user.update({ key : str(item[key]) })
+            return user
+        except Exception as e:
+            logger.critical("Error during data handling. Error: %s", e)
+            return None
 
     def create_user(self, user_data):
         """
@@ -43,9 +65,9 @@ class database_handler:
         :return: ID of the newly created user. None if creation failed.
         """
         try:
-            id_ = self.database.user_collection.insert_one(user_data).inserted_id
-            logger.warning(id_)
-            return id_
+            result = self.database.user_collection.insert_one(user_data)
+            logger.warning(result.inserted_id)
+            return str(result.inserted_id)
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
             return None
@@ -59,7 +81,20 @@ class database_handler:
         :return: True if update was succesful, false otherwise.
         """
         # acknowledged returns True if document is modified, otherwise false
-        return self.database.user_collection.update_one(filter={"_id": user_id}, update=user_info).acknowledged
+
+        try:
+            result = self.database.user_collection.update(
+                {"_id": ObjectId(user_id)}, 
+                {"$set":user_info}
+                )
+            if result["nModified"] > 0:
+                return 200
+            else:
+                return 304
+        except Exception as e:
+            logger.critical("Error during data handling. Error: %s", e)
+            return None
+
 
     def delete_user(self, user_id):
         """
@@ -68,22 +103,47 @@ class database_handler:
         :param string user_id: the ID of the deleted user.
         :return: True if deletion was successful, False otherwise.
         """
-        return self.database.user_collection.delete_one(filter={'_id': user_id}).acknowledged
+        try:
+            result = self.database.user_collection.delete_one(filter={'_id': ObjectId(user_id)}).acknowledged
+            return result
+        except Exception as e:
+            logger.critical("Error during data handling. Error: %s", e)
+            return None
 
     def get_messages(self):
         """
         :return: list of message IDs.
         """
-        return self.database.message_collection.find()
-
+        try:
+            data =  self.database.message_collection.find({ })
+            envelope = []
+            for item in data:
+                message = {}
+                for key in item:
+                 message.update({ key : str(item[key]) }) 
+                envelope.append(message)
+            return envelope
+        except Exception as e:
+            logger.critical("Error during data handling. Error: %s", e)
+            return None
+    
     def get_message(self, message_id):
-        """
-        Get a message from database with given ID.
+        
+        """Get a message from database with given ID.
 
         :param string message_id: the ID of the message.
-        :return: the message data as a dictionary.
-        """
-        return self.database.message_collection.find_one(filter={"_id": message_id})
+        :return: the message data as a dictionary."""
+
+        try:
+            cursor =  self.database.message_collection.find({'_id': ObjectId(message_id)})
+            message = {}
+            for item in cursor:
+                for key in item:
+                     message.update({ key : str(item[key]) })
+            return message
+        except Exception as e:
+            logger.critical("Error during data handling. Error: %s", e)
+            return None
 
     def create_message(self, message_data):
         """
@@ -92,7 +152,12 @@ class database_handler:
         :param dict message_data: Dictionary of the message data.
         :return: ID of the newly created message. None if creation failed.
         """
-        return self.database.message_collection.insert_one(message_data).inserted_id
+        try:
+            result = self.database.message_collection.insert_one(message_data)
+            return str(result.inserted_id)
+        except Exception as e:
+            logger.critical("Error during data handling. Error: %s", e)
+            return None
 
     def delete_message(self, message_id):
         """
@@ -101,8 +166,12 @@ class database_handler:
         :param string message_id: the ID of the message.
         :return: True if deletion successed, False otherwise.
         """
-        return self.database.message_collection.delete_one(filter={'_id': message_id}).acknowledged
-
+        try:
+            result = self.database.message_collection.delete_one(filter={'_id': ObjectId(message_id)}).acknowledged
+            return result
+        except Exception as e:
+            logger.critical("Error during data handling. Error: %s", e)
+            return None
     def mark_message_seen(self, message_id, user_id):
         """
         Mark the given message seen by the user.
@@ -130,6 +199,7 @@ class database_handler:
         }
 
         '''
+
         # needs to be decided if user has messages or message have users
         message = self.database.message_collection.find_one(filter={'_id': message_id})
 
