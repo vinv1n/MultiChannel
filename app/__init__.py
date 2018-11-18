@@ -33,6 +33,16 @@ handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 
 
+def start_irc():
+    try:
+        irc_handler = IRC_handler()
+        irc_handler.create_irc_thread()
+        return True, irc_handler
+    except Exception as e:
+        logger.critical("Could not start thread. Error: %s", e)
+
+    return False, None
+
 def create_app(args):
     """
     Creates and configures flask api and app.
@@ -60,15 +70,16 @@ def create_app(args):
     api.add_resource(MessageSeen, "/messages/<string:message_id>/<string:seen_id>")
     api.add_resource(UsersSingle, "/users/<string:user_id>")
 
-    #if not args.disable_bots:
-    Channels().create_irc_thread()
+    success, handler = start_irc()  # handler class to control irc queues
+    if not success:
+        logger.info("Irc not running")
 
     logger.info("Init channels is done")
 
     return app
 
 
-class Channels:
+class IRC_handler:
     """
     Creates instances of channels
     """
@@ -79,5 +90,18 @@ class Channels:
     def create_irc_thread(self):
         # FIXME this is horrible solution
         threading.Thread(target=run_irc(queue_in=self.queue_in_irc, queue_out=self.queue_out_irc)).start()
-        self.queue_in_irc.put("iamhere")
-        logger.info(self.queue_in_irc)
+
+    def get_irc_queue_out(self):
+        """
+        Get Queue output of irc queue.
+        :return: Queue from IRC class
+        """
+        return self.queue_out_irc
+
+    def get_irc_queue_in(self):
+        """
+        Get input Queue for irc.
+        :return: Queue to input data to IRC class
+        """
+        return self.queue_in_irc
+
