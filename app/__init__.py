@@ -1,21 +1,41 @@
 import logging
-import threading, queue
+import threading
+import queue
 
 from flask import Flask, render_template
 from flask_restful import Api
 
+from app.resources.users import Users, UserSingle
+from app.resources.messages import Messages, MessageSingle, MessageSeen
 
 # views for frontend stuff
 from app.views.index import index
+from app.database.db_handler import database_handler
+from app.resources.message_handler import Message_handler
 
-# resources
-# TODO: Rename resource files/classes
-from app.resources.users import Users, UsersSingle
-from app.resources.messages import Messages, MessageSingle, MessageSeen
+from functools import partial
+
+
+def _channel(body, _type, group, user, channel_info, _name):
+    """
+    Dummy channel, these are the inputs (except _name) of channels.
+    """
+    logger.warning('This is channel {}'.format(_name))
+    logger.warning('body: {}'.format(body))
+    logger.warning('type: {}'.format(_type))
+    logger.warning('group_message: {}'.format(group))
+    logger.warning('user: {}'.format(user))
+    logger.warning('Channel information: {}'.format(channel_info))
+
 
 # channels
-from app.channels.irc import IRC, run_irc
-from app.database.db_handler import database_handler
+channels = {
+    'email': partial(_channel, _name='email'),
+    'slack': partial(_channel, _name='slack'),
+}
+
+
+#from app.channels.irc import IRC, run_irc
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -40,16 +60,39 @@ def create_app(args):
     # Blueprints could be used?
     api = Api(app)
 
-    # Add resources here
-    api.add_resource(Users, "/users")
+    db_handler = database_handler()
+    message_handler = Message_handler(channels=channels, _database_handler=db_handler)
 
-    api.add_resource(Messages, "/messages")
-    api.add_resource(MessageSingle, "/messages/<string:message_id>")
-    api.add_resource(MessageSeen, "/messages/<string:message_id>/<string:seen_id>")
-    api.add_resource(UsersSingle, "/users/<string:user_id>")
+    # Resources
+    api.add_resource(
+        Users,
+        "/users",
+        resource_class_kwargs={'db_handler': db_handler},
+    )
+    api.add_resource(
+        UserSingle,
+        "/users/<string:user_id>",
+        resource_class_kwargs={'db_handler': db_handler}
+    )
+
+    api.add_resource(
+        Messages,
+        "/messages",
+        resource_class_kwargs={'db_handler': db_handler, 'message_handler': message_handler},
+    )
+    api.add_resource(
+        MessageSingle,
+        "/messages/<string:message_id>",
+        resource_class_kwargs={'db_handler': db_handler},
+    )
+    api.add_resource(
+        MessageSeen,
+        "/messages/<string:message_id>/<string:seen_id>",
+        resource_class_kwargs={'db_handler': db_handler},
+    )
 
     #if not args.disable_bots:
-    Channels()
+    #Channels()
     #database_handler()
 
     logger.warning("Init channels is done")
