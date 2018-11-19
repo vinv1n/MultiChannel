@@ -18,6 +18,7 @@ Channel function should return whether the sending was succesful or not.
 """
 
 from app.database.db_handler import database_handler
+import json
 
 
 class Message_handler():
@@ -51,13 +52,14 @@ class Message_handler():
         user_informations = self._get_user_informations(users)
 
         for user_id, information in user_informations.items():
-
             preferred_channel = information.get('preferred_channel')
             if preferred_channel is None:
                 # TODO: what to do if no channel is preferred?
                 pass
 
-            channel_information = information['channels'].get(preferred_channel)
+            _information = json.loads(information['channels'].replace("'", '"'))# HACK!!
+            channel_information = _information.get(preferred_channel)
+            # channel_information = information['channels'].get(preferred_channel)
             if channel_information is None:
                 # TODO: how to handle if no channel information?
                 pass
@@ -73,6 +75,7 @@ class Message_handler():
                 success = False
             if success:
                 self._set_message_sent_for_user(user=user_id)
+        return message_id
 
     def _get_user_informations(self, users):
         """
