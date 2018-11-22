@@ -37,7 +37,7 @@ channels = {
 }
 
 
-from app.channels.irc import IRC, run_irc
+from app.channels.irc import run_irc
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s:%(name)-s:%(levelname)s %(message)s",
                         datefmt="%a, %d %b %Y %H:%M:%S", filemode="w", filename="/tmp/multi.log")
@@ -109,18 +109,3 @@ def create_app(args):
     logger.info("Init channels is done")
 
     return app
-
-
-class Channels:
-    """
-    Creates instances of channels
-    """
-    def __init__(self):
-        self.queue_in_irc = Queue()
-        self.queue_out_irc = Queue()
-
-    def create_irc_thread(self):
-        # FIXME this is horrible solution
-        threading.Thread(target=run_irc(queue_in=self.queue_in_irc, queue_out=self.queue_out_irc)).start()
-        self.queue_in_irc.put("iamhere")
-        logger.info(self.queue_in_irc)
