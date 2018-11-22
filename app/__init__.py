@@ -1,6 +1,5 @@
 import logging
 import threading
-import queue
 
 from flask import Flask, render_template
 from flask_restful import Api
