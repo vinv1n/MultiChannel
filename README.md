@@ -12,7 +12,7 @@
    ### 5. run `docker-compose up`
    ### 6. ???
    ### 7. Profit
-   ### 8. -> http://0.0.0.0:5000
+   ### 8. -> http://0.0.0.0:5000 or http://127.0.0.1:5000
   
   ## Local
    ### Install python virtualenv
