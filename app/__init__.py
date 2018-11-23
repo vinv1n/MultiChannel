@@ -33,9 +33,6 @@ channels = {
     'slack': partial(_channel, _name='slack'),
 }
 
-
-#from app.channels.irc import IRC, run_irc
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -90,21 +87,6 @@ def create_app(args):
         resource_class_kwargs={'db_handler': db_handler},
     )
 
-    #if not args.disable_bots:
-    #Channels()
-    #database_handler()
-
     logger.warning("Init channels is done")
 
     return app
-
-
-class Channels:
-    """
-    Creates instances of channels
-    """
-    def __init__(self):
-        # define server address
-        # spawn threads
-        self.queue = queue.Queue()
-        threading.Thread(target=run_irc).start()
