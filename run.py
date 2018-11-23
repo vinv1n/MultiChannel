@@ -6,13 +6,6 @@ from flask import render_template
 from app.database.db_handler import database_handler
 
 
-logger = logging.getLogger(__name__)
-handler = logging.StreamHandler()
-formatter = logging.Formatter(
-        '%(asctime)s %(name)s %(levelname)s %(message)s', datefmt="%a, %d %b %Y %H:%M:%S")  # TODO reformat
-handler.setFormatter(formatter)
-handler.setLevel(logging.INFO)
-logger.addHandler(handler)
 
 def main():
     parser = argparse.ArgumentParser(description="Multichannel")  # TODO write better description

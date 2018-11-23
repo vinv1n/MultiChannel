@@ -1,10 +1,12 @@
 import logging
 import threading
+import time
 import queue
 
 from flask import Flask, render_template
 from flask_restful import Api
 
+from queue import Queue
 from app.resources.users import Users, UserSingle
 from app.resources.messages import Messages, MessageSingle, MessageSeen
 
@@ -35,10 +37,20 @@ channels = {
 }
 
 
-#from app.channels.irc import IRC, run_irc
+from app.channels.irc import run_irc
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)-15s:%(name)-s:%(levelname)s %(message)s",
+                        datefmt="%a, %d %b %Y %H:%M:%S", filemode="w", filename="/tmp/multi.log")
+
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter(
+        '%(asctime)-15s:%(name)-s:%(levelname)s %(message)s', datefmt="%a, %d %b %Y %H:%M:%S")
+handler.setFormatter(formatter)
+handler.setLevel(logging.INFO)
+
+logger.addHandler(handler)
 
 
 def create_app(args):
@@ -48,7 +60,7 @@ def create_app(args):
 
     :return: preconfigured api
     """
-
+    logger.debug("Creating Api")
     app = Flask(__name__)
 
     # Environment configuration
@@ -91,21 +103,10 @@ def create_app(args):
         resource_class_kwargs={'db_handler': db_handler},
     )
 
-    #if not args.disable_bots:
-    #Channels()
-    #database_handler()
+    success, handler = start_irc()  # handler class to control irc queues
+    if not success:
+        logger.info("Irc not running")
 
-    logger.warning("Init channels is done")
+    logger.info("Init channels is done")
 
     return app
-
-
-class Channels:
-    """
-    Creates instances of channels
-    """
-    def __init__(self):
-        # define server address
-        # spawn threads
-        self.queue = queue.Queue()
-        threading.Thread(target=run_irc).start()
