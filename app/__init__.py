@@ -46,22 +46,12 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)-15s:%(name)-s:%(level
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
 formatter = logging.Formatter(
-        '%(asctime)-15s:%(name)-s:%(levelname)s %(message)s', datefmt="%a, %d %b %Y %H:%M:%S")  # TODO reformat
+        '%(asctime)-15s:%(name)-s:%(levelname)s %(message)s', datefmt="%a, %d %b %Y %H:%M:%S")
 handler.setFormatter(formatter)
 handler.setLevel(logging.INFO)
 
 logger.addHandler(handler)
 
-
-def start_irc():
-    try:
-        irc_handler = IRC_handler()
-        irc_handler.create_irc_thread()
-        return True, irc_handler
-    except Exception as e:
-        logger.critical("Could not start thread. Error: %s", e)
-
-    return False, None
 
 def create_app(args):
     """
@@ -120,34 +110,3 @@ def create_app(args):
     logger.info("Init channels is done")
 
     return app
-<<<<<<< HEAD
-=======
-
-
-class IRC_handler:
-    """
-    Creates instances of channels
-    """
-    def __init__(self):
-        self.queue_in_irc = Queue()
-        self.queue_out_irc = Queue()
-
-    def create_irc_thread(self):
-        # FIXME this is horrible solution
-        threading.Thread(target=run_irc(queue_in=self.queue_in_irc, queue_out=self.queue_out_irc)).start()
-
-    def get_irc_queue_out(self):
-        """
-        Get Queue output of irc queue.
-        :return: Queue from IRC class
-        """
-        return self.queue_out_irc
-
-    def get_irc_queue_in(self):
-        """
-        Get input Queue for irc.
-        :return: Queue to input data to IRC class
-        """
-        return self.queue_in_irc
-
->>>>>>> 4ce2ace2e63ef91e1d67f0e6109ae7e375ebc3c9
