@@ -1,5 +1,5 @@
 # MultiChannel
-   ### **To update Irc submodule use:** `git submodule update´
+   **To update Irc submodule use:** `git submodule init && git submodule update`
 # Dependencies
     Docker
     MultiChannel-IRC-bot
