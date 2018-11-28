@@ -47,7 +47,7 @@ class Message:
 
     def get_message_id(self):
         # TODO: some hashing would be nice
-        return str(self._id)
+        return str(self._id, errors="ignore")
 
     def _form_message(self):
         receivers = {}
