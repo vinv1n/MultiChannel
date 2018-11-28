@@ -19,9 +19,11 @@ Channel function should return whether the sending was succesful or not.
 
 from app.database.db_handler import database_handler
 import json
+import logging
 
+log = logging.getLogger(__name__)
 
-class Message_handler():
+class Message_handler:
     """
     Handles the logic of seding messages to different channels.
     """
@@ -57,6 +59,7 @@ class Message_handler():
                 # TODO: what to do if no channel is preferred?
                 pass
 
+            # TODO please add information why this HACK is done
             _information = json.loads(information['channels'].replace("'", '"'))# HACK!!
             channel_information = _information.get(preferred_channel)
             # channel_information = information['channels'].get(preferred_channel)
@@ -71,7 +74,8 @@ class Message_handler():
                     channel=preferred_channel,
                     channel_information=channel_information,
                 )
-            except:             # TODO: Handle error somehow smarter
+            except Exception as e:  # TODO: Handle error somehow smarter
+                log.debug("Message could not be sent. Reason: %s", e)
                 success = False
             if success:
                 self._set_message_sent_for_user(user=user_id)
