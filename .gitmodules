@@ -1,0 +1,3 @@
+[submodule "MultiChannel-IRC-bot"]
+	path = MultiChannel-IRC-bot
+	url = https://github.com/vinv1n/MultiChannel-IRC-bot

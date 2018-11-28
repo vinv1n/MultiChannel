@@ -1,7 +1,6 @@
 import logging
 import threading
 import time
-import queue
 
 from flask import Flask, render_template
 from flask_restful import Api
@@ -36,13 +35,8 @@ channels = {
     'slack': partial(_channel, _name='slack'),
 }
 
-
-from app.channels.irc import run_irc
-
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s:%(name)-s:%(levelname)s %(message)s",
                         datefmt="%a, %d %b %Y %H:%M:%S", filemode="w", filename="/tmp/multi.log")
-
-
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
 formatter = logging.Formatter(
@@ -102,11 +96,5 @@ def create_app(args):
         "/messages/<string:message_id>/<string:seen_id>",
         resource_class_kwargs={'db_handler': db_handler},
     )
-
-    success, handler = start_irc()  # handler class to control irc queues
-    if not success:
-        logger.info("Irc not running")
-
-    logger.info("Init channels is done")
 
     return app
