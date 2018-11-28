@@ -54,7 +54,10 @@ def create_app(args):
 
     :return: preconfigured api
     """
-    logger.debug("Creating Api")
+
+    logger.info("Creating Api")
+
+    # creating flask app
     app = Flask(__name__)
 
     # Environment configuration

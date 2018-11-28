@@ -121,7 +121,6 @@ class Message_handler:
         # TODO: this, use the database_handler
         pass
 
-
 def form_message(message, users):
     receivers = dict()
     for user in users:
