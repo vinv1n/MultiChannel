@@ -1,8 +1,8 @@
 # MultiChannel
 
 # Dependencies
-  # Docker
-  # MultiChannel-IRC-bot
+  ## Docker
+  ## MultiChannel-IRC-bot
  
  # How to:
   ## Docker
