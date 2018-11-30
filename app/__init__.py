@@ -103,10 +103,6 @@ def create_app(args):
         resource_class_kwargs={'db_handler': db_handler},
     )
 
-    success, handler = start_irc()  # handler class to control irc queues
-    if not success:
-        logger.info("Irc not running")
-
     logger.info("Init channels is done")
 
     return app
