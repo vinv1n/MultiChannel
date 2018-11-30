@@ -120,7 +120,7 @@ class database_handler:
             for item in data:
                 message = {}
                 for key in item:
-                 message.update({ key : str(item[key]) }) 
+                 message.update({ key : str(item[key]) })
                 envelope.append(message)
             return envelope
         except Exception as e:
