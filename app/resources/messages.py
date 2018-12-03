@@ -1,16 +1,18 @@
 from flask import request
-from flask_restful import Resource
-
+from flask_restful import Resource, reqparse
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 class Messages(Resource):
     """
     Resource for posting, fetching and deleting messages.
     """
 
-    def __init__(self, db_handler, message_handler):
+    def __init__(self, db_handler, message_handler, jwt):
         self.db_handler = db_handler
         self.message_handler = message_handler
+        self.jwt = jwt
 
+    @jwt_required
     def get(self):
         """
         Get a list of all messages in database.
@@ -18,6 +20,7 @@ class Messages(Resource):
         messages = self.db_handler.get_messages()
         return {'messages': messages}
 
+    @jwt_required
     def post(self):
         """
         Send a new message.
@@ -51,9 +54,11 @@ class MessageSingle(Resource):
     For handling single messages in database.
     """
 
-    def __init__(self, db_handler):
+    def __init__(self, db_handler, jwt):
         self.db_handler = db_handler
+        self.jwt = jwt
 
+    @jwt_required
     def get(self, message_id):
         """
         Return all information of a single message.
@@ -64,21 +69,25 @@ class MessageSingle(Resource):
         else:
             return {"message": "No messages with id:"+message_id}, 404
 
+    @jwt_required
     def delete(self, message_id):
         """
         Delete a message with the given ID.
         """
-        response = self.db_handler.delete_message(message_id)
-        return {}
-
+        if check_authorization() == 1:
+            response = self.db_handler.delete_message(message_id)
+            return {response}
+        else:
+            return {"Error" : "Unauthorized"}, 401
 
 class MessageSeen(Resource):
     """
     Handles marking messages seen by certain users.
     """
 
-    def __init__(self, db_handler):
+    def __init__(self, db_handler, jwt):
         self.db_handler = db_handler
+        self.jwt = jwt
 
     def get(self, message_id, seen_id):
         """
@@ -86,4 +95,9 @@ class MessageSeen(Resource):
         mark the message_id read by user_id.
         """
         # TODO: magic pixel handling
-        return {}
+
+def check_authorization(self, user_id):
+    if get_jwt_identity() == "admin":
+        return 1
+    else:
+        return 0

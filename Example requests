@@ -1,52 +1,49 @@
-Headers:
-Content-Tpye:applicaltion/json
+Login:
+
+	/login
+
+	Headers: Content-Type:application/json
+
+	{"username":"","password:""}
+
+	returns a token for authentication.
+
+
+
+token usage in requests:
+
+include	Headers: Authorization : Bearer <token>
+
 
 
 User POST:
 
-{
-"username": "User",
-"password": "secrut",
-"preferred_channel": "email",
-"channels": {
-            "email": {"address": "adderss@server.fi"},
-            "facebook": {"user_id": "user"},
-            "telegram": {"user_id": "user"},
-            "irc": {"nickname": "user", "network": "user"},
-            "slack": {"channel": "user","username": "user"}
-           }
-}
+	/users
+
+	Headers: Content-Type:application/json
 
 
-CURL
 
-curl -X GET -H 'Content-Type: application/json' -i 'http://0.0.0.0:5000/users' --data '{
-"username": "User",
-"password": "secrut",
-"preferred_channel": "email",
-"channels": {
-            "email": {"address": "adderss@server.fi"},
-            "facebook": {"user_id": "user"},
-            "telegram": {"user_id": "user"},
-            "irc": {"nickname": "user", "network": "user"},
-            "slack": {"channel": "user","username": "user"}
-           }
-}'
-
+	{
+	"username": "User",
+	"password": "secrut",
+	"preferred_channel": "email",
+	"email": "adderss@server.fi",
+	"facebook":"user",
+	"telegram": "user",
+	"irc": {"username": "user", "network": "user"},
+	"slack": {"channel": "user","username": "user"}
+	}
 
 Message POST:
 
- {
-      "content": "Testmessage5.0",
-      "sender": "Hackerman",
-      "sent_to": ["user1","user2"]
-}
+	/messages
+	
+	Headers: Content-Type:application/json, Authorization : Bearer <token>
 
-CURL
-
-curl -X GET -H 'Content-Type: application/json' -i 'http://0.0.0.0:5000/messages' --data ' {
-      "content": "Testmessage5.0",
-      "sender": "Hackerman",
-      "sent_to": ["user1","user2"]
-}'
+	{
+	      "content": "Testmessage5.0",
+	      "sender": "Hackerman",
+	      "sent_to": ["user1","user2"]
+	}
 

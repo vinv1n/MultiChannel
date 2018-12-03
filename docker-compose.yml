@@ -22,16 +22,6 @@ services:
       - backend
     command: mongod --ipv6 --noauth
 
-  irc:
-    build:
-      context: ./MultiChannel-IRC-bot/
-    ports:
-      - 8000:8000
-    depends_on:
-      - api
-    networks:
-      - backend
-
 networks:
   backend:
     driver: "bridge"

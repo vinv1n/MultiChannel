@@ -3,11 +3,12 @@ import threading
 import time
 
 from flask import Flask, render_template
-from flask_restful import Api
+from flask_restful import Api, reqparse
 
 from queue import Queue
 from app.resources.users import Users, UserSingle
 from app.resources.messages import Messages, MessageSingle, MessageSeen
+from app.resources.authentication import Login
 
 # views for frontend stuff
 from app.views.index import index
@@ -15,7 +16,7 @@ from app.database.db_handler import database_handler
 from app.resources.message_handler import Message_handler
 
 from functools import partial
-
+from flask_jwt_extended import JWTManager
 
 def _channel(body, _type, group, user, channel_info, _name):
     """
@@ -31,8 +32,8 @@ def _channel(body, _type, group, user, channel_info, _name):
 
 # channels
 channels = {
-    'email': partial(_channel, _name='email'),
-    'slack': partial(_channel, _name='slack'),
+    """'email': partial(_channel, _name='email'),
+    'slack': partial(_channel, _name='slack'),"""
 }
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s:%(name)-s:%(levelname)s %(message)s",
@@ -45,6 +46,7 @@ handler.setFormatter(formatter)
 handler.setLevel(logging.INFO)
 
 logger.addHandler(handler)
+
 
 
 def create_app(args):
@@ -65,36 +67,46 @@ def create_app(args):
 
     # Blueprints could be used?
     api = Api(app)
-
     db_handler = database_handler()
     message_handler = Message_handler(channels=channels, _database_handler=db_handler)
+    app.config['JWT_SECRET_KEY'] = 'thisissecretfortesting123'
+    jwt = JWTManager(app)
+
+  
 
     # Resources
     api.add_resource(
+        Login,
+        "/login",
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+    )
+    api.add_resource(
         Users,
         "/users",
-        resource_class_kwargs={'db_handler': db_handler},
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
     api.add_resource(
         UserSingle,
         "/users/<string:user_id>",
-        resource_class_kwargs={'db_handler': db_handler}
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
 
     api.add_resource(
         Messages,
         "/messages",
-        resource_class_kwargs={'db_handler': db_handler, 'message_handler': message_handler},
+        resource_class_kwargs={'db_handler': db_handler, 'message_handler': message_handler,'jwt':jwt},
     )
     api.add_resource(
         MessageSingle,
         "/messages/<string:message_id>",
-        resource_class_kwargs={'db_handler': db_handler},
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
     api.add_resource(
         MessageSeen,
         "/messages/<string:message_id>/<string:seen_id>",
-        resource_class_kwargs={'db_handler': db_handler},
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+    
     )
+
 
     return app
