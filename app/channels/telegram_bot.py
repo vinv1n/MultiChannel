@@ -1,7 +1,9 @@
 import urllib3
 import logging
+import pprint
+import json
 
-from tokens import TELEGRAM_TOKEN
+# from tokens import TELEGRAM_TOKEN
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +17,8 @@ BOT_COMMANDS = {
     "get_member_count": "getChatMembersCount"
 }
 
+TELEGRAM_TOKEN = "734503972:AAH_fbUmJRypHS1ynVI9vLPcsyiFU6SgsME"
+
 class Telegram:
 
     def __init__(self, *args, **kwargs):
@@ -26,17 +30,14 @@ class Telegram:
         # for requests
         self.http = urllib3.PoolManager()
 
-        # active channel id's and names
-        self.active_channels = {}
-
-    def send_message(self, msg, parameters):
+    def send_message(self, parameters):
         """
         Send message to channels or users
         :param msg: message string
         :param parameters: parameters for query strings
         :return: status code and response body
         """
-        response, status = self._make_request(request_type="POST", command=BOT_COMMANDS.get("sendMessage"),
+        response, status = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
                                                 parameters=parameters)
 
         return response, status
@@ -46,7 +47,7 @@ class Telegram:
         Get messages that are send to the bot
         :return: response status_code, response body
         """
-        status, response = self._make_request(request_type="GET", command=BOT_COMMANDS.get("getUpdates"))
+        status, response = self._make_request(request_type="GET", command=BOT_COMMANDS.get("updates"))
         return response, status
 
     def _make_request(self, request_type, command, parameters=None):
@@ -87,9 +88,3 @@ class Telegram:
 
         query_string += "&".join(querys)
         return query_string
-
-
-class JsonParser:
-
-    def __init__(self):
-        pass
