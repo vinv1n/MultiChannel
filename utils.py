@@ -14,6 +14,10 @@ class MultiChannelExeption(Exception):
 
 
 class Message:
+    """
+    Message class containing all information about messages.
+    This class should make same everywhere.
+    """
 
     def __init__(self, body, message_type, sender, channel_information, receivers):
         self._id = uuid.uuid4()  # create random id for message
