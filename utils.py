@@ -32,6 +32,8 @@ class Message:
         else:
             self.group_message = False
 
+        self.receivers = receivers
+
 
     @classmethod
     def create_message(cls, body, message_type, group_message, user, channel_information):
