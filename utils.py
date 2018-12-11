@@ -1,5 +1,12 @@
 import logging
 import uuid
+import six
+import json
+
+if six.PY2:
+    import urllib
+else:
+    import urllib3 as urllib
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +43,9 @@ class Message:
         message = cls(body, message_type, group_message, user, channel_information)
         return message
 
-    def get_as_dict(self):
+    def as_dict(self):
         try:
-            message_dict = self._create_message_dict()
+            message_dict = self._form_message()
             return message_dict
         except (ValueError, AttributeError) as e:
             logger.critical("Dictionary could not be created. Reason: %s", e)
@@ -66,3 +73,38 @@ class Message:
         return formed_message
 
 
+class Networking:
+    def __init__(self, *args, **kwargs):
+        self._pool = urllib.PoolManager()
+
+    def make_post_request(self, headers, url, args=None):
+        if not isinstance(args, dict):
+            raise ValueError("Incorrect args type")
+
+        if args:
+            response = self._pool.request(method="POST", url=url, fields=args, headers=headers)
+        else:
+            response = self._pool.request(method="POST", url=url, headers=headers)
+
+        return self._decode_response(response=response)
+
+    def make_get_request(self, headers, url, args=None):
+        if not isinstance(args, dict):
+            raise ValueError("Incorrect args type")
+
+        if args:
+            response = self._pool.request(url=url, method="GET", fields=args, headers=headers)
+        else:
+            response = self._pool.request(url=url, method="GET", headers=headers)
+
+        return self._decode_response(response=response)
+
+    @staticmethod
+    def _decode_response(response):
+        response_json = None
+        try:
+            response_json = json.loads(response.decode("utf-8"))
+        except ValueError:
+            return None, 400
+
+        return response_json, 200
