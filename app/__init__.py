@@ -37,8 +37,6 @@ channels = {
 }
 
 
-from app.channels.irc import run_irc
-
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s:%(name)-s:%(levelname)s %(message)s",
                         datefmt="%a, %d %b %Y %H:%M:%S", filemode="w", filename="/tmp/multi.log")
 
@@ -78,28 +76,28 @@ def create_app(args):
     # Resources
     api.add_resource(
         Users,
-        "/users",
+        "/api/users",
         resource_class_kwargs={'db_handler': db_handler},
     )
     api.add_resource(
         UserSingle,
-        "/users/<string:user_id>",
+        "/api/users/<string:user_id>",
         resource_class_kwargs={'db_handler': db_handler}
     )
 
     api.add_resource(
         Messages,
-        "/messages",
+        "/api/messages",
         resource_class_kwargs={'db_handler': db_handler, 'message_handler': message_handler},
     )
     api.add_resource(
         MessageSingle,
-        "/messages/<string:message_id>",
+        "/api/messages/<string:message_id>",
         resource_class_kwargs={'db_handler': db_handler},
     )
     api.add_resource(
         MessageSeen,
-        "/messages/<string:message_id>/<string:seen_id>",
+        "/api/messages/<string:message_id>/<string:seen_id>",
         resource_class_kwargs={'db_handler': db_handler},
     )
 
