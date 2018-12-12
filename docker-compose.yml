@@ -5,6 +5,8 @@ services:
     build: .
     ports:
       - 5000:5000
+    volumes:
+      - ./:/root/api/
     links:
       - mongo
     depends_on:
@@ -14,8 +16,6 @@ services:
 
   mongo:
     image: "mongo:latest"
-    volumes:
-      - ./data/mongo:/data/db
     ports:
       - 27018:27017
     networks:
