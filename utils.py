@@ -2,6 +2,8 @@ import logging
 import uuid
 import six
 import json
+import hashlib
+import re
 
 if six.PY2:
     import urllib
@@ -9,6 +11,11 @@ else:
     import urllib3 as urllib
 
 logger = logging.getLogger(__name__)
+
+# For password validation
+# Checks if password string has at least one capital letter
+# one special character and at least 6 letters long
+VALID_PASSWORD = re.compile(r'[A-zA-Z0-9-_/+?\/#\$:,!@%&]{6,}')
 
 
 class MultiChannelExeption(Exception):
@@ -112,3 +119,34 @@ class Networking:
             return None, 400
 
         return response_json, 200
+
+# These password functions might not be needed
+def hash_password(password):
+    """
+    Create hash from plaintext string with random salt
+    """
+    def _is_valid_password(string):
+        is_match = re.match(VALID_PASSWORD, string)
+        if is_match:
+            return True
+        else:
+            return False
+
+    if not isinstance(password, bytes):
+        password = password.encode()
+
+    if not _is_valid_password(string=password):
+        raise ValueError("Password did not meet requirements")
+
+    salt = uuid.uuid4().bytes
+    hashed_password = hashlib.pbkdf2_hmac("sha256", password=password, salt=salt, iterations=10000)
+    return {"hash": hashed_password, "salt": salt}
+
+def validate_hash(password_hash, salt, password):
+    """
+    Checks is given password is correct
+    """
+    hashed_password = hashlib.pbkdf2_hmac("sha256", password=password, salt=salt, iterations=10000)
+    if hashed_password == password_hash:
+        return True
+    return False
