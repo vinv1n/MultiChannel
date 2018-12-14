@@ -36,7 +36,7 @@ channels = {
     'slack': partial(_channel, _name='slack'),
 }
 
-
+# for log file
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s:%(name)-s:%(levelname)s %(message)s",
                         datefmt="%a, %d %b %Y %H:%M:%S", filemode="w", filename="/tmp/multi.log")
 
