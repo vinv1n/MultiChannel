@@ -196,12 +196,7 @@ class database_handler:
                 }
             }
         }
-
-<<<<<<< HEAD
         """
-=======
-        '''
->>>>>>> master
 
         # needs to be decided if user has messages or message have users
         message = self.database.message_collection.find_one(filter={'_id': message_id})
