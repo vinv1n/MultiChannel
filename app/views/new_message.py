@@ -33,7 +33,7 @@ def _new_message_post(request):
         msg = 'Failure: {}'.format(response.status_code)
 
     return render_template(
-        'user_creation_response.html',
+        'msg_creation_response.html',
         msg=msg,
     )
 
