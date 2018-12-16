@@ -7,6 +7,7 @@ The input parameters of a channel function are:
 
 
 body: The text which is being sent.
+sender: nicname of the sender.
 type: a string describing what type of a message is being sent.
 group_message: boolean value.
 user: the ID of user who the message is being sent to.
@@ -39,7 +40,7 @@ class Message_handler:
             self._database_handler = _database_handler
 
     def send_message(self, message, users):
-        """
+        
         Send the message to the users using their preferred channels.
         :param dictionary message: New message that is sent.
         :param list users: List of user IDs who the message is sent to.
@@ -49,12 +50,12 @@ class Message_handler:
         message_id = self._database_handler.create_message(message_data=_message)
         if message_id is None:
             # TODO: how to handle if message insertion fails?
-            return
-
+            return None
+        """
         user_informations = self._get_user_informations(users)
 
         for user_id, information in user_informations.items():
-            preferred_channel = information.get('preferred_channel')
+            preferred_channel = information['preferred_channel']
             if preferred_channel is None:
                 # TODO: what to do if no channel is preferred?
                 pass
@@ -126,9 +127,9 @@ def form_message(message, users):
     for user in users:
         receivers[user] = {'sent': False, 'seen': False, 'answer': ''}
     formed_message = {
-        'body': message['body'],
-        'type': message['type'],
-        'group_message': message['group_message'],
-        'receivers': receivers,
+        'body': message,
+        #'type': message['type'],
+        #'group_message': message['group_message'],
+        'receivers': receivers
     }
     return formed_message

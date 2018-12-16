@@ -9,7 +9,7 @@ from flask_restful import Api, reqparse
 from queue import Queue
 from app.resources.users import Users, UserSingle
 from app.resources.messages import Messages, MessageSingle, MessageSeen
-from app.resources.authentication import Login
+from app.resources.authentication import Login, Logout
 
 # views for frontend stuff
 from app.views.index import index
@@ -25,7 +25,7 @@ def _channel(body, _type, group, user, channel_info, _name):
     """
     logger.warning('This is channel {}'.format(_name))
     logger.warning('body: {}'.format(body))
-    logger.warning('type: {}'.format(_type))
+    logger.warning('type: {}'.format(_type))  
     logger.warning('group_message: {}'.format(group))
     logger.warning('user: {}'.format(user))
     logger.warning('Channel information: {}'.format(channel_info))
@@ -74,9 +74,16 @@ def create_app(args):
     db_handler = database_handler()
     message_handler = Message_handler(channels=channels, _database_handler=db_handler)
     app.config['JWT_SECRET_KEY'] = 'thisissecretfortesting123'
+    app.config['JWT_BLACKLIST_ENABLED'] = True
+    app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access']
     jwt = JWTManager(app)
+    blacklist = set()
 
-  
+
+    @jwt.token_in_blacklist_loader
+    def check_if_token_in_blacklist(token):
+        jti = token['jti']
+        return jti in blacklist
 
     # Resources
     api.add_resource(
@@ -84,48 +91,30 @@ def create_app(args):
         "/login",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
+
+    api.add_resource(
+        Logout,
+        "/logout",
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, 'blacklist':blacklist},
+    )
     api.add_resource(
         Users,
-<<<<<<< HEAD
         "/api/users",
-        resource_class_kwargs={'db_handler': db_handler},
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
     api.add_resource(
         UserSingle,
         "/api/users/<string:user_id>",
-        resource_class_kwargs={'db_handler': db_handler}
-=======
-        "/users",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
     api.add_resource(
         UserSingle,
         "/users/<string:user_id>",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
->>>>>>> Tokens, beware of bugs. Check examples on use if you want to test.
     )
 
     api.add_resource(
         Messages,
-<<<<<<< HEAD
-        "/api/messages",
-        resource_class_kwargs={'db_handler': db_handler, 'message_handler': message_handler},
-    )
-    api.add_resource(
-        MessageSingle,
-        "/api/messages/<string:message_id>",
-        resource_class_kwargs={'db_handler': db_handler},
-    )
-    api.add_resource(
-        MessageSeen,
-        "/api/messages/<string:message_id>/<string:seen_id>",
-        resource_class_kwargs={'db_handler': db_handler},
-    )
-
-    logger.info("Init channels is done")
-
-    return app
-=======
         "/messages",
         resource_class_kwargs={'db_handler': db_handler, 'message_handler': message_handler,'jwt':jwt},
     )
@@ -138,9 +127,8 @@ def create_app(args):
         MessageSeen,
         "/messages/<string:message_id>/<string:seen_id>",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
-    
     )
 
+    logger.info("Init channels is done")
 
     return app
->>>>>>> Tokens, beware of bugs. Check examples on use if you want to test.
