@@ -8,6 +8,13 @@ Login:
 
 	returns a token for authentication.
 
+Logout:
+	/logout
+
+	Headers: Authorization : Bearer <token>
+
+	logs you out and blacklists your token.
+
 
 
 token usage in requests:
@@ -42,7 +49,7 @@ Message POST:
 	Headers: Content-Type:application/json, Authorization : Bearer <token>
 
 	{
-	      "content": "Testmessage5.0",
+	      "message": "Testmessage5.0",
 	      "sender": "Hackerman",
 	      "sent_to": ["user1","user2"]
 	}

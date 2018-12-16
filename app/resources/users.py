@@ -33,32 +33,26 @@ class Users(Resource):
     
     @jwt_required
     def get(self):
-        self.check_authorization()
         response = self.db_handler.get_users()
-        return {"Users": response}
+        if response == None:
+            return {"Error" : "Error during data handling"}, 400
+        else:
+            return {"Users": response}, 200
 
 
     def post(self):
         """ Post a new user to the database. Make a dictionary to pass to the db_handler.
 
-        {
-        username: string,
-        uuid: string,
-        password: string,
-        preferred_channel: string,
-        channels: {
-            {
-            email: {address: string},
-            facebook: {user_id: string},
-            telegram: {user_id: string},
-            irc: {
-                nickname: string,
-                network: string
-                }
-            slack: {
-                channel: string,
-                username: string
-            }"""
+      	{
+	"username": "User",
+	"password": "secrut",
+	"preferred_channel": "email",
+	"email": "adderss@server.fi",
+	"facebook":"user",
+	"telegram": "user",
+	"irc": {"username": "user", "network": "user"},
+	"slack": {"channel": "user","username": "user"}
+	}"""
 
         user_data = {}
         channels = {
@@ -92,6 +86,8 @@ class Users(Resource):
         response = self.db_handler.create_user(user_data)
         if response == "Username already in use":
             return {'Error' : "Username in use"}, 400
+        elif response == None:
+            return {"Error" : "Error during data handling"}
         else:
             return {"user_id": response}, 200
 
@@ -104,12 +100,13 @@ class UserSingle(Resource):
     def check_authorization(self, user_id):
         try:
             user = self.db_handler.get_user(user_id)
-            if get_jwt_identity() == response["username"] or "admin":
+            if get_jwt_identity() in [user["username"], "admin"]:
                 return 1
             else:
                 return 0
         except Exception as e:
             return 0
+ 
 
     def __init__(self, db_handler, jwt):
         self.db_handler = db_handler
@@ -117,29 +114,47 @@ class UserSingle(Resource):
 
     @jwt_required
     def get(self, user_id):
-        if self.check_authorization == 1:
+        if self.check_authorization(user_id) == 1:
             response = self.db_handler.get_user(user_id)
-            return {"User": response}
+            if response == None:
+                return {"Error":"Error during data handling"}, 400
+            else:
+                return {"User": response}, 200
         else:
             return{"Error": "Unauthorized"}, 401
         
     
     @jwt_required
     def patch(self, user_id):
-        if self.check_authorization == 1:
+        if self.check_authorization(user_id) == 1:
             data = request.get_json()
             user_data = {}
             for key in data:
+                if key == "username":
+                    return {"Error": "Not modified. Cannot modify username"}, 400
+                elif key == "preferred_channel":
+                    if data[key] not in ["email", "slack", "irc", "facebook", "telegram"]:
+                        return {"Error": "Not modified. Channel unknown"}, 400
+                elif key == "password":
+                    user_data[str(key)]= pbkdf2_sha256.encrypt(saslprep(data["password"]), rounds=200000, salt_size=16)
                 user_data[str(key)] = data.get(key)
             response = self.db_handler.update_user(user_data, user_id)
-            return {}, response
+            
+            if response == 200:
+                return {"Message":"modified"}, response
+            else:
+                return {"Error": "Not modified"}, response
         else:
             return{"Error": "Unauthorized"}, 401
+
+
     @jwt_required
     def delete(self, user_id):
-        if self.check_authorization == 1:
+        if self.check_authorization(user_id) == 1:
             response = self.db_handler.delete_user(user_id)
-            return {"message": response}
+            if response == None:
+                return {"Error": "Error during data handling"}, 400
+            return {"Message": response}
         else:
             return{"Error": "Unauthorized"}, 401
 

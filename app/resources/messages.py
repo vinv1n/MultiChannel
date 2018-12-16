@@ -17,36 +17,33 @@ class Messages(Resource):
         """
         Get a list of all messages in database.
         """
-        messages = self.db_handler.get_messages()
-        return {'messages': messages}
+        response = self.db_handler.get_messages()
+        if response == None:
+            return {"Error": "Error during data handling"}
+        else:
+            return {'Messages': response}
 
     @jwt_required
     def post(self):
         """
         Send a new message.
         """
-
-        message = {}
-        users = {}
         try:
+            args = {}
             data = request.get_json()
-            message = data['message']
-            users = data['users']
+            args['message'] = data['message']
+            args['sent_to'] = data['sent_to']
         except Exception as e:
-            return {'error': 'Sent data was in wrong form'}, 400
-
-        try:
-            message_id = self.message_handler.send_message(
-                message=message,
-                users=users,
-            )
-        except Exception as e:
-            return {'error': e}, 400
-
+            return {'Error' : "Malformed request. Include 'message' and 'sent_to' as a list of users"}, 400
+        message_id = self.message_handler.send_message(
+             message = args["message"],
+                #sender = get_jwt_identity(),
+            users = args["sent_to"]
+        )
         if message_id is not None:
             return {'message_id': message_id}
         else:
-            return {'error': 'Could not sent the message'}, 400
+            return {'Error': 'Could not post the message'}, 400
 
 
 class MessageSingle(Resource):
@@ -64,10 +61,10 @@ class MessageSingle(Resource):
         Return all information of a single message.
         """
         message = self.db_handler.get_message(message_id)
-        if message != {} or message is None:
-            return {'message': message}, 200
+        if message != {} or message != None:
+            return {'Message': message}, 200
         else:
-            return {"message": "No messages with id:"+message_id}, 404
+            return {"Message": "No messages with id:"+message_id}, 404
 
     @jwt_required
     def delete(self, message_id):
@@ -76,7 +73,10 @@ class MessageSingle(Resource):
         """
         if check_authorization() == 1:
             response = self.db_handler.delete_message(message_id)
-            return {response}
+            if resposnse == None:
+                return {"Error": "Error during data handling"}
+            else:
+                return {"Message": response}
         else:
             return {"Error" : "Unauthorized"}, 401
 

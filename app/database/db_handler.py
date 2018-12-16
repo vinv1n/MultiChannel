@@ -21,6 +21,7 @@ class database_handler:
         else:
             self.database = Mongo("multichannel")
 
+
     def get_users(self):
         """
         :return: list of user IDs.
@@ -38,19 +39,22 @@ class database_handler:
             logger.critical("Error during data handling. Error: %s", e)
             return None
 
-    def get_user(self, user_id):
+    def get_user(self,user_id):
         """
         Get user data.
 
         :param string user_id: the ID of the user.
         :return: the user data as a dictionary.
         """
+
         try:
             cursor =  self.database.user_collection.find({'_id': ObjectId(user_id)})
             
+            if cursor.count() == 0:
+                return None
             for item in cursor:
                 user = {}
-                for [key] in item:
+                for key in item:
                     if key == "_id":
                         user.update({ key : str(item[key]) })
                     else:
@@ -64,7 +68,7 @@ class database_handler:
         """
         Get user data.
 
-        :param string user_id: the ID of the user.
+        :param string username: the username of the user.
         :return: the user data as a dictionary.
         """
         try:
@@ -83,6 +87,7 @@ class database_handler:
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
             return None
+
 
     def create_user(self, user_data):
         """
@@ -150,7 +155,10 @@ class database_handler:
             for item in data:
                 message = {}
                 for key in item:
-                 message.update({ key : str(item[key]) })
+                    if key == "_id":
+                        message.update({ key : str(item[key]) })
+                    else:
+                        message.update({ key : item[key] })
                 envelope.append(message)
             return envelope
         except Exception as e:
@@ -169,7 +177,10 @@ class database_handler:
             message = {}
             for item in cursor:
                 for key in item:
-                     message.update({ key : str(item[key]) })
+                    if key == "_id":
+                        user.update({ key : str(item[key]) })
+                    else:
+                        user.update({ key : item[key] })
             return message
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
@@ -184,6 +195,7 @@ class database_handler:
         """
         try:
             result = self.database.message_collection.insert_one(message_data)
+            logger.warning(result.inserted_id)
             return str(result.inserted_id)
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
@@ -243,6 +255,13 @@ class database_handler:
         user_status['seen'] = True
         return self.database.message_collection.update_one(filter={"_id": message_id}, update=message).acknowledged
 """
+
+        """message = self.get_message(message_id)
+        if message == None:
+            return "No message found"
+        else:"""
+
+
     def add_answer_to_message(self, message_id, user_id, answer):
 
         """Add the given answer to the message by the user.
