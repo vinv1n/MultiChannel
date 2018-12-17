@@ -24,8 +24,9 @@ class Login(Resource):
         else:
             if pbkdf2_sha256.verify(saslprep(args["password"]), user["password"]):
                 try:
-                    access_token = create_access_token(identity = user["username"])
-                    return {"Message": "new token created", "access_token": access_token}
+                    access_token = create_access_token(identity = { "username" : user["username"], "admin" : user["admin"] })
+                    refresh_token = create_refresh_token(identity = { "username" : user["username"], "admin" : user["admin"] })
+                    return {"Message": "Logged in", "access_token": access_token, "refresh_token": refresh_token}
                 except Exception as e:
                     return {"Message": "Error creating token"+str(e)}
             else:
@@ -49,3 +50,35 @@ class Logout(Resource):
         except Exception as e:
             return {"Error":"Error blacklisting token."+str(e)}, 500
 
+
+class RefreshLogin(Resource):
+
+    def __init__(self, db_handler, jwt):
+        self.db_handler = db_handler
+        self.jwt = jwt
+
+
+    @jwt_refresh_token_required
+    def post(self):
+        try:
+            user = get_jwt_identity()
+            access_token = create_access_token(identity = user)
+            return {'access_token': access_token}
+        except Exception as e:
+            return {"Error" : "Error creating token"}, 400
+
+class RefreshLogout(Resource):
+
+    def __init__(self, db_handler, jwt, blacklist):
+        self.db_handler = db_handler
+        self.jwt = jwt
+        self.blacklist = blacklist
+
+    @jwt_refresh_token_required
+    def post(self):
+        try:
+            jti = get_raw_jwt()['jti']
+            self.blacklist.add(jti)
+            return {"Message": "Logged out"}, 200
+        except Exception as e:
+            return {"Error":"Error blacklisting token."+str(e)}, 500

@@ -41,7 +41,7 @@ class Message_handler:
 
     def send_message(self, message, users):
         
-        Send the message to the users using their preferred channels.
+        """Send the message to the users using their preferred channels.
         :param dictionary message: New message that is sent.
         :param list users: List of user IDs who the message is sent to.
         """
@@ -51,7 +51,7 @@ class Message_handler:
         if message_id is None:
             # TODO: how to handle if message insertion fails?
             return None
-        """
+        
         user_informations = self._get_user_informations(users)
 
         for user_id, information in user_informations.items():
@@ -59,8 +59,9 @@ class Message_handler:
             if preferred_channel is None:
                 # TODO: what to do if no channel is preferred?
                 pass
-
+            """
             # TODO please add information why this HACK is done
+            # TODO REMOVE THIS HACK?
             _information = json.loads(information['channels'].replace("'", '"'))# HACK!!
             channel_information = _information.get(preferred_channel)
             # channel_information = information['channels'].get(preferred_channel)
@@ -79,7 +80,7 @@ class Message_handler:
                 log.debug("Message could not be sent. Reason: %s", e)
                 success = False
             if success:
-                self._set_message_sent_for_user(user=user_id)
+                self._set_message_sent_for_user(user=user_id)"""
         return message_id
 
     def _get_user_informations(self, users):

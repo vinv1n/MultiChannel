@@ -4,9 +4,16 @@ Login:
 
 	Headers: Content-Type:application/json
 
-	{"username":"","password:""}
+	{"username":"","password":""}
 
-	returns a token for authentication.
+	returns a token and refresh token for authentication.
+
+Refresh:
+	/re-login #Todo change this?
+
+	Headers: Authorization : Bearer <refreshtoken>
+
+	returns new token if refresh token valid.
 
 Logout:
 	/logout
@@ -14,6 +21,14 @@ Logout:
 	Headers: Authorization : Bearer <token>
 
 	logs you out and blacklists your token.
+
+Logout:
+	/re-logout #Todo change this?
+
+	Headers: Authorization : Bearer <refreshtoken>
+
+	logs you out and blacklists your token.
+
 
 
 
@@ -30,17 +45,18 @@ User POST:
 	Headers: Content-Type:application/json
 
 
-
-	{
-	"username": "User",
-	"password": "secrut",
-	"preferred_channel": "email",
-	"email": "adderss@server.fi",
-	"facebook":"user",
-	"telegram": "user",
-	"irc": {"username": "user", "network": "user"},
-	"slack": {"channel": "user","username": "user"}
-	}
+{
+"username": "User",
+"password": "secrut",
+"preferred_channel": "email",
+"channels": {
+            "email": {"address": "adderss@server.fi"},
+            "facebook": {"user_id": "user"},
+            "telegram": {"user_id": "user"},
+            "irc": {"nickname": "user", "network": "user"},
+            "slack": {"channel": "user","username": "user"}
+           }
+}
 
 Message POST:
 

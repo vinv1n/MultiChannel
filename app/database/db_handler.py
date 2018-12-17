@@ -22,18 +22,33 @@ class database_handler:
             self.database = Mongo("multichannel")
 
 
-    def get_users(self):
+    def get_users(self, admin):
         """
         :return: list of user IDs.
         """
         try:
             envelope = []
             cursor =  self.database.user_collection.find({ })
-            for item in cursor:
-                user = {}
-                user.update({ "_id" : str(item["_id"]) })
-                user.update({ "username" : item["username"] })
-                envelope.append(user)
+            
+            if admin == True:
+                for item in cursor:
+                    user = {}
+                    for key in item:
+                        if key == "password":
+                            pass
+                        elif key == "_id":
+                            user[key] = str(item[key])
+                        else:
+                            user[key] = item[key]
+                    envelope.append(user)
+
+            else:
+                for item in cursor:
+                    user = {}
+                    user["_id"] = str(item["_id"])
+                    user["username"] = item["username"]
+                    envelope.append(user)
+
             return envelope
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
@@ -52,13 +67,18 @@ class database_handler:
             
             if cursor.count() == 0:
                 return None
+
             for item in cursor:
                 user = {}
                 for key in item:
-                    if key == "_id":
-                        user.update({ key : str(item[key]) })
+                    if key == "password":
+                        pass
+                    elif key == "_id":
+                        user[key] = str(item[key])
                     else:
-                        user.update({ key : item[key] })
+                        user[key] = item[key]
+                break
+                
             return user
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
@@ -76,13 +96,16 @@ class database_handler:
             
             if cursor.count() == 0:
                 return None
+            
             for item in cursor:
                 user = {}
                 for key in item:
                     if key == "_id":
-                        user.update({ key : str(item[key]) })
+                        user[key] = str(item[key])
                     else:
-                        user.update({ key : item[key] })
+                        user[key] = item[key]
+                break
+                
             return user
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
@@ -98,7 +121,7 @@ class database_handler:
         """
         check = self.database.user_collection.find({"username": user_data["username"]})
         if check.count() > 0:
-            return "Username already in use"
+            return "used"
         try:
             result = self.database.user_collection.insert_one(user_data)
             logger.warning(result.inserted_id)
