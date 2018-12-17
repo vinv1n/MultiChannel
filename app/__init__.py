@@ -8,7 +8,7 @@ from flask_restful import Api, reqparse
 from queue import Queue
 from app.resources.users import Users, UserSingle
 from app.resources.messages import Messages, MessageSingle, MessageSeen
-from app.resources.authentication import Login, Logout
+from app.resources.authentication import Login, Logout, RefreshLogin, RefreshLogout
 
 # views for frontend stuff
 from app.views.index import index
@@ -71,7 +71,7 @@ def create_app(args):
     message_handler = Message_handler(channels=channels, _database_handler=db_handler)
     app.config['JWT_SECRET_KEY'] = 'thisissecretfortesting123'
     app.config['JWT_BLACKLIST_ENABLED'] = True
-    app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access']
+    app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
     jwt = JWTManager(app)
     blacklist = set()
 
@@ -89,10 +89,23 @@ def create_app(args):
     )
 
     api.add_resource(
+        RefreshLogin,
+        "/re-login", #Maybe change this to something that might be more suitable? Patch request to login?
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+    )
+
+    api.add_resource(
         Logout,
         "/logout",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, 'blacklist':blacklist},
     )
+
+    api.add_resource(
+        RefreshLogout,
+        "/re-logout",
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, 'blacklist':blacklist},
+    )
+
     api.add_resource(
         Users,
         "/users",

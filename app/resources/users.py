@@ -17,15 +17,15 @@ class Users(Resource):
     Resource to get and add users.
     """
 
-    def check_authorization(self, user_id):
+    def check_authorization(self):
         try:
-            user = self.db_handler.get_user(user_id)
-            if get_jwt_identity() == "admin":
-                return 1
+            payload = get_jwt_identity()
+            if payload["admin"] == True:
+                return True
             else:
-                return 0
+                return False
         except Exception as e:
-            return 0
+            return False
     
     def __init__(self, db_handler, jwt):
         self.db_handler = db_handler
@@ -33,7 +33,7 @@ class Users(Resource):
     
     @jwt_required
     def get(self):
-        response = self.db_handler.get_users()
+        response = self.db_handler.get_users(self.check_authorization())
         if response == None:
             return {"Error" : "Error during data handling"}, 400
         else:
@@ -41,55 +41,29 @@ class Users(Resource):
 
 
     def post(self):
-        """ Post a new user to the database. Make a dictionary to pass to the db_handler.
-
-      	{
-	"username": "User",
-	"password": "secrut",
-	"preferred_channel": "email",
-	"email": "adderss@server.fi",
-	"facebook":"user",
-	"telegram": "user",
-	"irc": {"username": "user", "network": "user"},
-	"slack": {"channel": "user","username": "user"}
-	}"""
+        """ Post a new user to the database. Make a dictionary to pass to the db_handler."""
 
         user_data = {}
-        channels = {
-            "email": {"address": ""},
-            "facebook": {"user_id": ""},
-            "telegram": {"user_id": ""},
-            "irc": {"username": "", "network": ""},
-            "slack": {"channel": "","username": ""}
-           }
         try:
             data = request.get_json()
-        except Exception as e:
-            return {'Error' : "Malformed request"}, 400
 
-        try:
-            user_data["username"] = data["username"]
-            user_data["password"] = pbkdf2_sha256.encrypt(saslprep(data["password"]), rounds=200000, salt_size=16)
-            user_data["preferred_channel"] = data["preferred_channel"]
-            channels["email"]["address"] = data["email"]
-            channels["facebook"]["user_id"] = data["facebook"]
-            channels["facebook"]["user_id"] = data["telegram"]
-            channels["irc"]["username"] = data["irc"]["username"]
-            channels["irc"]["network"] = data["irc"]["network"]
-            channels["slack"]["username"] = data["slack"]["username"]
-            channels["slack"]["channel"] = data["slack"]["channel"]
-            user_data["channels"] = channels
+            user_data["username"] = data.get("username")
+            user_data["password"] = pbkdf2_sha256.encrypt(saslprep(data.get("password")), rounds=200000, salt_size=16)
+            user_data["preferred_channel"] = data.get("preferred_channel")
+            user_data["channels"] = data.get("channels")
+            user_data["admin"] = False
         except Exception as e:
-            return {"Error": "Error parsing data"+str(e)
-            }, 400
-                
+            return {'Error' : "Malformed request / Error parsing data"}, 400
+
         response = self.db_handler.create_user(user_data)
-        if response == "Username already in use":
-            return {'Error' : "Username in use"}, 400
+    
+
+        if response == "used":
+            return {'Error' : "Username already in use"}, 400
         elif response == None:
             return {"Error" : "Error during data handling"}
         else:
-            return {"user_id": response}, 200
+            return {"Message" : "User created","user_id": response}, 200
 
 
 
@@ -98,12 +72,24 @@ class UserSingle(Resource):
     Resource for getting, updating and deleting single users.
     """
     def check_authorization(self, user_id):
+        
         try:
             user = self.db_handler.get_user(user_id)
-            if get_jwt_identity() in [user["username"], "admin"]:
-                return 1
+            payload = get_jwt_identity()
+            if payload["admin"] == True or payload["username"] == user["username"]:
+                return True
             else:
-                return 0
+                return False
+        except Exception as e:
+            return 0
+    
+    def check_admin(self):
+        try:
+            payload = get_jwt_identity()
+            if payload["admin"] == True:
+                return True
+            else:
+                return False
         except Exception as e:
             return 0
  
@@ -114,7 +100,7 @@ class UserSingle(Resource):
 
     @jwt_required
     def get(self, user_id):
-        if self.check_authorization(user_id) == 1:
+        if self.check_authorization(user_id) == True:
             response = self.db_handler.get_user(user_id)
             if response == None:
                 return {"Error":"Error during data handling"}, 400
@@ -126,11 +112,14 @@ class UserSingle(Resource):
     
     @jwt_required
     def patch(self, user_id):
-        if self.check_authorization(user_id) == 1:
+        if self.check_authorization(user_id) == True:
             data = request.get_json()
             user_data = {}
             for key in data:
-                if key == "username":
+                if key == "admin":
+                    if self.check_admin != True:
+                        return {"Error": "Not modified. Only administrator can change admin flag"}, 400
+                elif key == "username":
                     return {"Error": "Not modified. Cannot modify username"}, 400
                 elif key == "preferred_channel":
                     if data[key] not in ["email", "slack", "irc", "facebook", "telegram"]:
@@ -150,10 +139,12 @@ class UserSingle(Resource):
 
     @jwt_required
     def delete(self, user_id):
-        if self.check_authorization(user_id) == 1:
+        if self.check_authorization(user_id) == True:
             response = self.db_handler.delete_user(user_id)
             if response == None:
                 return {"Error": "Error during data handling"}, 400
+            elif response == True:
+                return {"Message" : "User deleted"}
             return {"Message": response}
         else:
             return{"Error": "Unauthorized"}, 401
