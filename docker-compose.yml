@@ -2,7 +2,11 @@ version: '3.3'
 
 services:
   api:
-    build: .
+    build:
+      context: .
+      cache_from:
+        - debian:stretch
+        - multichannel_api:latest
     ports:
       - 5000:5000
     volumes:
@@ -12,10 +16,14 @@ services:
     depends_on:
       - mongo
     networks:
+      - network
       - backend
 
   mongo:
-    image: "mongo:latest"
+    # update to newer version time to time
+    # might bork something when upgrated
+    # needs testing when updated
+    image: "mongo:4.1"
     ports:
       - 27018:27017
     networks:
@@ -25,6 +33,9 @@ services:
   irc:
     build:
       context: ./MultiChannel-IRC-bot/
+      cache_from:
+        - debian:stretch
+        - multichannel_irc:latest
     ports:
       - 8000:8000
     depends_on:
@@ -34,4 +45,7 @@ services:
 
 networks:
   backend:
+    external: false
     driver: "bridge"
+  network:
+    external: true
