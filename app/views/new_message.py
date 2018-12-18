@@ -20,8 +20,6 @@ def new_message():
 def _new_message_post(request):
     msg = _parse_html_form_message(request.form)
     users = _get_users()
-    logger.warning(msg)         # debug
-    logger.warning(users)       # debug
     data = {
         'message': msg,
         'users': users,
@@ -42,7 +40,6 @@ def _get_users():
     response = requests.get('{}/users'.format(URL))
     if response.status_code == 200:
         users = response.json().get('users', [])
-        logger.warning(users)
         ids = [user.get('_id') for user in users]
         return ids
     else:
@@ -51,7 +48,6 @@ def _get_users():
 
 def _parse_html_form_message(form):
     form_dict = form.to_dict(flat=False)
-    logger.warning(form_dict)
     body = form_dict.get('body', [''])
     type = form_dict.get('type', [''])
     group_message = form_dict.get('group_message', [''])
