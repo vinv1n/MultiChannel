@@ -10,7 +10,7 @@ RUN /usr/bin/pip3 install -r requirements.txt
 
 EXPOSE 5000 6667
 
-ADD crontab /etc/cron.d/cron-update
+ADD ./cron/crontab /etc/cron.d/cron-update
 RUN chmod 0644 /etc/cron.d/cron-update
 # mods might need to be changed
 RUN chmod a+rwx /root/api/update.sh

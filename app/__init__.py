@@ -9,6 +9,7 @@ from flask_restful import Api
 from queue import Queue
 from app.resources.users import Users, UserSingle
 from app.resources.messages import Messages, MessageSingle, MessageSeen
+from app.resources.updates import Update
 
 # views for frontend stuff
 from app.views.index import index
@@ -99,6 +100,12 @@ def create_app(args):
         MessageSeen,
         "/api/messages/<string:message_id>/<string:seen_id>",
         resource_class_kwargs={'db_handler': db_handler},
+    )
+    # enpoint to update messages to database
+    api.add_resource(
+        Update,
+        "/api/channels/update",
+        resource_class_kwargs={'db_handler': db_handler, "channels": channels},
     )
 
     logger.info("Init channels is done")
