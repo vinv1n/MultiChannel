@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<style>
+input[type=text], select {
+  width: 50%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+input[type=submit] {
+  width: 50%;
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+input[type=submit]:hover {
+  background-color: #45a049;
+}
+
+div {
+  border-radius: 5px;
+  background-color: #f2f2f2;
+  padding: 20px;
+}
+</style>
+<body>
+
+<h1 align="center">Sign Up</h1>
+
+<div>
+  <form enctype="application/json" method="POST" action="">
+  
+  
+  
+  <table><tr><td>
+    <label for="fname">Name</label></td>
+   <td width="100%"> <input type="text" id="fname" name="username" placeholder="Your name..">
+	
+	</td></tr>
+
+   <tr><td> <label for="lname"></br>Password</label></td>
+   <td> <input type="text" id="lname" name="password" placeholder="Your Password.."></td></tr>
+
+    <tr><td> <label for="lname"></br>Confirm Password</label></td>
+   <td> <input type="text" id="lname" name="con_pass" placeholder="Confirm password"> </td></tr>
+	
+		</table>
+
+	<h2>Channels</h2>
+	<p>Give the correct information for each different channel you wish to use.
+	Select one channel as your prefered channel.Your wish to mainly use </p>
+	<table><tr><td>
+	   <label for="fname">Email</label></td>
+   <td width="100%"> <input type="text" id="fname" name="email_address" placeholder=""><input type="radio" name="preferred_channel" value="email"><br>
+
+	</td></tr>
+	
+	 <td> <label for="fname"></br>IRC-Nick</label></td>
+  <td>  <input type="text" id="fname" name="irc_nick" placeholder=""><input type="radio" name="preferred_channel" value="irc"><br></td></tr>
+	
+		<td>  <label for="fname"></br>IRC-Network</label></td>
+    <td> <input type="text" id="fname" name="irc_network" placeholder=""><input type="radio" name="preferred_channel" value="irc_chn"><br></td></tr>
+	
+			 <td> <label for="fname"></br>Slack Username</label></td>
+    <td> <input type="text" id="fname" name="slack_user" placeholder=""><input type="radio" name="preferred_channel" value="slack"><br></td></tr>
+	
+  			<td>  <label for="fname"></br>Telegram username</label></td>
+    <td > <input type="text" id="fname" name="telegram" placeholder=""><input type="radio" name="preferred_channel" value="telegram"><br>
+	
+	
+	</td></tr></table>
+    <input type="submit" value="Signup">
+  </form>
+</div>
+
+</body>
+</html>
