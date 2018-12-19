@@ -18,7 +18,7 @@ class Users(Resource):
 
     def get(self):
         response = self.db_handler.get_users()
-        return {"Users": response}
+        return {"users": response}
 
     def post(self):
         """ Post a new user to the database. Make a dictionary to pass to the db_handler.
@@ -41,11 +41,9 @@ class Users(Resource):
                 channel: string,
                 username: string
             }"""
-
         user_data = {}
         try:
             data = request.get_json()
-
             user_data["username"] = data.get("username")
             user_data["password"] = data.get("password")
             user_data["preferred_channel"] = data.get("preferred_channel")
