@@ -1,3 +1,4 @@
+from app.views.login import login
 from app.views.new_message import new_message
 from app.views.sign_up import sign_up
 from app.views.message_status import message_status
@@ -8,6 +9,13 @@ def webpage(app):
     This function adds to a flask app the logic
     for the webpage.
     """
+
+    app.add_url_rule(
+        rule="/webui/login",
+        endpoint="login",
+        view_func=login,
+        methods=['GET', 'POST'],
+    )
 
     app.add_url_rule(
         rule="/webui/new_message",
