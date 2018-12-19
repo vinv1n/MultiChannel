@@ -27,7 +27,7 @@ def _sign_up_post(request):
         msg = 'Error while creating user: {}'.format(response.status_code)
 
     return render_template(
-        'msg_creation_response.html',
+        'response.html',
         msg=msg,
     )
 

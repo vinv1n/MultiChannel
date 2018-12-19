@@ -12,7 +12,7 @@ def new_message():
         return _new_message_post(request)
     else:
         return render_template(
-            "message.html",
+            "new_message.html",
             action_path='',
         )
 
@@ -31,7 +31,7 @@ def _new_message_post(request):
         msg = 'Failure: {}'.format(response.status_code)
 
     return render_template(
-        'msg_creation_response.html',
+        'response.html',
         msg=msg,
     )
 

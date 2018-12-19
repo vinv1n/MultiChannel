@@ -1,6 +1,6 @@
 from app.views.new_message import new_message
 from app.views.sign_up import sign_up
-from app.views.message import message
+from app.views.message_status import message_status
 
 
 def webpage(app):
@@ -24,8 +24,8 @@ def webpage(app):
     )
 
     app.add_url_rule(
-        rule="/webui/message/<string:message_id>",
-        endpoint="message",
-        view_func=message,
+        rule="/webui/message_status/<string:message_id>",
+        endpoint="message_status",
+        view_func=message_status,
         methods=['GET', 'DELETE'],
     )
