@@ -148,6 +148,3 @@ class UserSingle(Resource):
             return {"Message": response}
         else:
             return{"Error": "Unauthorized"}, 401
-
-    
-   
