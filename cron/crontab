@@ -1,2 +1,2 @@
 # runs a scripts to update received messages
-* * * * * root /root/api/update.sh
+* * * * * root /root/api/update.py
