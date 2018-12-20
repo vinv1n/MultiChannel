@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 class Update(Resource):
     """
     For cron job to update database status from all channels
+    Does not return anything
     """
 
     def __init__(self, handler, channels):
@@ -18,7 +19,6 @@ class Update(Resource):
     def get(self):
         thread = threading.Thread(target=self._update, kwargs={"database": self.database, "channels": self.channels})
         thread.start()
-        return {"result": "ok"}, 200
 
     @staticmethod
     def _update(*args, **kwargs):
@@ -36,6 +36,6 @@ class Update(Resource):
                 try:
                     # TODO correct function
                     database.mark_message_seen(result)
-                except Exception:
-                    logger.warning("Result could not be inserted to database")
+                except Exception as e:
+                    logger.warning("Result could not be inserted to database %s", e)
                     continue
