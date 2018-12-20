@@ -16,7 +16,6 @@ services:
     depends_on:
       - mongo
     networks:
-      - network
       - backend
 
   mongo:
@@ -47,5 +46,3 @@ networks:
   backend:
     external: false
     driver: "bridge"
-  network:
-    external: true

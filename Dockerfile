@@ -13,7 +13,7 @@ EXPOSE 5000 6667
 ADD ./cron/crontab /etc/cron.d/cron-update
 RUN chmod 0644 /etc/cron.d/cron-update
 # mods might need to be changed
-RUN chmod a+rwx /root/api/cron/update.py
+RUN chmod a+rwx /root/api/cron/update.sh
 
 RUN cron
 
