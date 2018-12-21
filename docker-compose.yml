@@ -16,7 +16,6 @@ services:
     depends_on:
       - mongo
     networks:
-      - network
       - backend
 
   mongo:
@@ -30,22 +29,7 @@ services:
       - backend
     command: mongod --ipv6 --noauth
 
-  irc:
-    build:
-      context: ./MultiChannel-IRC-bot/
-      cache_from:
-        - debian:stretch
-        - multichannel_irc:latest
-    ports:
-      - 8000:8000
-    depends_on:
-      - api
-    networks:
-      - backend
-
 networks:
   backend:
     external: false
     driver: "bridge"
-  network:
-    external: true

@@ -3,6 +3,7 @@ from flask_restful import Resource, reqparse
 from passlib.hash import pbkdf2_sha256
 from passlib.utils import saslprep
 from flask_jwt_extended import jwt_required, get_jwt_identity
+import logging
 
 
 """"
@@ -116,9 +117,8 @@ class UserSingle(Resource):
             data = request.get_json()
             user_data = {}
             for key in data:
-                if key == "admin":
-                    if self.check_admin != True:
-                        return {"Error": "Not modified. Only administrator can change admin flag"}, 400
+                if key == "admin" and self.check_admin() != True and data[key] not in [True,False]:
+                        return {"Error": "Admin field should be True or False. Olnly admin can modify this value."}, 400
                 elif key == "username":
                     return {"Error": "Not modified. Cannot modify username"}, 400
                 elif key == "preferred_channel":

@@ -91,25 +91,21 @@ def create_app(args):
         "/login",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
-
     api.add_resource(
         RefreshLogin,
         "/re-login", #Maybe change this to something that might be more suitable? Patch request to login?
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
-
     api.add_resource(
         Logout,
         "/logout",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, 'blacklist':blacklist},
     )
-
     api.add_resource(
         RefreshLogout,
         "/re-logout",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, 'blacklist':blacklist},
     )
-
     api.add_resource(
         Users,
         "/api/users",
@@ -121,24 +117,18 @@ def create_app(args):
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
     api.add_resource(
-        UserSingle,
-        "/users/<string:user_id>",
-        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
-    )
-
-    api.add_resource(
         Messages,
-        "/messages",
+        "/api/messages",
         resource_class_kwargs={'db_handler': db_handler, 'message_handler': message_handler,'jwt':jwt},
     )
     api.add_resource(
         MessageSingle,
-        "/messages/<string:message_id>",
+        "/api/messages/<string:message_id>",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
     api.add_resource(
         MessageSeen,
-        "/messages/<string:message_id>/<string:seen_id>",
+        "/api/messages/<string:message_id>/<string:seen_id>",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
 

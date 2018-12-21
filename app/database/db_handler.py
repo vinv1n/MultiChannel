@@ -238,7 +238,7 @@ class database_handler:
             logger.critical("Error during data handling. Error: %s", e)
             return None
 
-   def mark_message_seen(self, message_id, user_id):
+    def mark_message_seen(self, message_id, user_id):
         """
         Mark the given message seen by the user.
         Do this only if the message type is 'ack' or 'answer',
