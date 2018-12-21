@@ -59,10 +59,17 @@ class Message_handler:
             if preferred_channel is None:
                 # TODO: what to do if no channel is preferred?
                 pass
+<<<<<<< HEAD
             
             # TODO please add information why this HACK is done
             # TODO REMOVE THIS HACK?
             _information = information['channels']
+=======
+            """
+            # TODO please add information why this HACK is done
+            # TODO REMOVE THIS HACK?
+            _information = json.loads(information['channels'].replace("'", '"'))# HACK!!
+>>>>>>> a9891309d334c93fa43db1113629ed076c8eb117
             channel_information = _information.get(preferred_channel)
             #channel_information = information['channels'].get(preferred_channel)
             if channel_information is None:
@@ -80,7 +87,7 @@ class Message_handler:
                 log.debug("Message could not be sent. Reason: %s", e)
                 success = False
             if success:
-                self._set_message_sent_for_user(user=user_id)
+                self._set_message_sent_for_user(user=user_id)"""
         return message_id
 
     def _get_user_informations(self, users):

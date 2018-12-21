@@ -277,6 +277,12 @@ class database_handler:
         user_status['seen'] = True
         return self.database.message_collection.update_one(filter={"_id": message_id}, update=message).acknowledged
 
+        message = self.get_message(message_id)
+        if message == None:
+            return "No message found"
+        else:
+
+
     def add_answer_to_message(self, message_id, user_id, answer):
         """
         Add the given answer to the message by the user.
@@ -286,6 +292,7 @@ class database_handler:
         :param string user_id: the ID of the user who answered the message.
         :return: True if the operation was successful, False otherwise.
         """
+        
         # needs to be decided if user has messages or message have users
         message = self.database.message_collection.find_one(filter={'_id': message_id})
 
