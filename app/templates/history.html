@@ -2,9 +2,23 @@
 {% block content %}
 <h1>Message History</h1>
 
-{% for message in messages %}
-<p><a href="/webui/message_status/{{message.get('_id')}}">{{message.get('_id')}}</a></p>
+<table class="table table-bordered table-dark">
+  <thead>
+    <tr>
+      <th scope="col">Date</th>
+      <th scope="col">Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for message in messages %}
+    <tr>
+      <td><a href="/webui/message_status/{{message.get('_id')}}">{{message.get('_id')}}</a></td>
+      <td>{{message.get('type')}}</td>
+    </tr>
+    {% endfor %}
 
-{% endfor %}
+  </tbody>
+</table>
+
 
 {% endblock %}
