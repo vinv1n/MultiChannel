@@ -120,14 +120,8 @@ class UserSingle(Resource):
             data = request.get_json()
             user_data = {}
             for key in data:
-<<<<<<< HEAD
                 if key == "admin" and self.check_admin() != True and data[key] not in [True,False]:
                         return {"Error": "Admin field should be True or False. Olnly admin can modify this value."}, 400
-=======
-                if key == "admin":
-                    if self.check_admin != True:
-                        return {"Error": "Not modified. Only administrator can change admin flag"}, 400
->>>>>>> a9891309d334c93fa43db1113629ed076c8eb117
                 elif key == "username":
                     return {"Error": "Not modified. Cannot modify username"}, 400
                 elif key == "preferred_channel":

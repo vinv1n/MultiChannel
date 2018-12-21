@@ -88,89 +88,50 @@ def create_app(args):
     # Resources
     api.add_resource(
         Login,
-        "/login",
+        "/api/login",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
-<<<<<<< HEAD
-=======
-
->>>>>>> a9891309d334c93fa43db1113629ed076c8eb117
     api.add_resource(
         RefreshLogin,
-        "/re-login", #Maybe change this to something that might be more suitable? Patch request to login?
+        "/api/re-login", #Maybe change this to something that might be more suitable? Patch request to login?
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
-<<<<<<< HEAD
-=======
-
->>>>>>> a9891309d334c93fa43db1113629ed076c8eb117
     api.add_resource(
         Logout,
-        "/logout",
+        "/api/logout",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, 'blacklist':blacklist},
     )
-<<<<<<< HEAD
-=======
-
->>>>>>> a9891309d334c93fa43db1113629ed076c8eb117
     api.add_resource(
         RefreshLogout,
-        "/re-logout",
+        "/api/re-logout",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, 'blacklist':blacklist},
     )
-<<<<<<< HEAD
     api.add_resource(
         Users,
         "/api/users",
-=======
-
-    api.add_resource(
-        Users,
-        "/users",
->>>>>>> a9891309d334c93fa43db1113629ed076c8eb117
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
     api.add_resource(
         UserSingle,
-<<<<<<< HEAD
         "/api/users/<string:user_id>",
-=======
-        "/users/<string:user_id>",
->>>>>>> a9891309d334c93fa43db1113629ed076c8eb117
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
     api.add_resource(
         Messages,
-<<<<<<< HEAD
         "/api/messages",
-=======
-        "/messages",
->>>>>>> a9891309d334c93fa43db1113629ed076c8eb117
         resource_class_kwargs={'db_handler': db_handler, 'message_handler': message_handler,'jwt':jwt},
     )
     api.add_resource(
         MessageSingle,
-<<<<<<< HEAD
         "/api/messages/<string:message_id>",
-=======
-        "/messages/<string:message_id>",
->>>>>>> a9891309d334c93fa43db1113629ed076c8eb117
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
     api.add_resource(
         MessageSeen,
-<<<<<<< HEAD
         "/api/messages/<string:message_id>/<string:seen_id>",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
 
     logger.info("Init channels is done")
-=======
-        "/messages/<string:message_id>/<string:seen_id>",
-        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
-    
-    )
-
->>>>>>> a9891309d334c93fa43db1113629ed076c8eb117
 
     return app
