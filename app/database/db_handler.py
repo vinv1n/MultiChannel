@@ -111,7 +111,6 @@ class database_handler:
             logger.critical("Error during data handling. Error: %s", e)
             return None
 
-
     def create_user(self, user_data):
         """
         Create a new user.
@@ -276,12 +275,6 @@ class database_handler:
 
         user_status['seen'] = True
         return self.database.message_collection.update_one(filter={"_id": message_id}, update=message).acknowledged
-
-        message = self.get_message(message_id)
-        if message == None:
-            return "No message found"
-        else:
-
 
     def add_answer_to_message(self, message_id, user_id, answer):
         """

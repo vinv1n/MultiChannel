@@ -80,7 +80,7 @@ class Message_handler:
                 log.debug("Message could not be sent. Reason: %s", e)
                 success = False
             if success:
-                self._set_message_sent_for_user(user=user_id)"""
+                self._set_message_sent_for_user(user=user_id)
         return message_id
 
     def _get_user_informations(self, users):
