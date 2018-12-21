@@ -3,10 +3,6 @@ from flask_restful import Resource, reqparse
 from passlib.hash import pbkdf2_sha256
 from passlib.utils import saslprep
 from flask_jwt_extended import jwt_required, get_jwt_identity
-<<<<<<< HEAD
-import logging
-=======
->>>>>>> a9891309d334c93fa43db1113629ed076c8eb117
 
 
 """"
