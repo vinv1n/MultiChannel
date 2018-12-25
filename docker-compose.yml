@@ -47,5 +47,4 @@ networks:
   backend:
     external: false
     driver: "bridge"
-  network:
-    external: true
+
