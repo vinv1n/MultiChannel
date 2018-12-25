@@ -16,7 +16,6 @@ services:
     depends_on:
       - mongo
     networks:
-      - network
       - backend
 
   mongo:
