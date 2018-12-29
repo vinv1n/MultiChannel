@@ -16,11 +16,13 @@
     <tr><td width="10%">
 	<label for="fname">Group Message</label></td>
       <td>{{message.get('group_message')}}</td></tr>
-    <tr><td width="10%">
-	<label for="fname">Body</label></td>
-      <td>{{message.get('body')}}</td></tr>
+    <!-- <tr><td width="10%"> -->
+	<!-- <label for="fname">Body</label></td> -->
+      <!-- <td><p>{{message.get('body')}}</p></td></tr> -->
   </table>
-	
+
+<h2>Message Body</h2>
+<p>{{message.get('body')}}</p>
 
 {% if show_answers %}
   <h2>Answers</h2>
@@ -35,7 +37,7 @@
   <tbody>
     {%for receiver in receivers%}
     <tr>
-      <th scope="row">{{receiver}}</th>
+      <th scope="row">{{receivers[receiver].get('username')}}</th>
       <td>{{receivers[receiver].get('seen')}}</td>
       <td>{{receivers[receiver].get('answer')}}</td>
     </tr>
