@@ -26,14 +26,16 @@ def _new_message_post(request):
     }
     response = requests.post('{}/messages'.format(URL), json=data)
     if response.status_code == 200:
-        msg = ' New post created!'
+        return render_template(
+            'new_message.html',
+            result='New post created!',
+        )
     else:
         msg = 'Failure: {}'.format(response.status_code)
-
-    return render_template(
-        'response.html',
-        msg=msg,
-    )
+        return render_template(
+            'response.html',
+            msg=msg,
+        )
 
 
 def _get_users():
