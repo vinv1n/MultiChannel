@@ -3,6 +3,7 @@ from app.views.new_message import new_message
 from app.views.sign_up import sign_up
 from app.views.history import history
 from app.views.message_status import message_status
+from app.views.user_info import user_info
 
 
 def webpage(app):
@@ -29,6 +30,13 @@ def webpage(app):
         rule="/webui/sign_up",
         endpoint="sign_up",
         view_func=sign_up,
+        methods=['GET', 'POST'],
+    )
+
+    app.add_url_rule(
+        rule="/webui/user_info/<string:user_id>",
+        endpoint="user_info",
+        view_func=user_info,
         methods=['GET', 'POST'],
     )
 
