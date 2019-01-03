@@ -9,7 +9,7 @@
    ### 1. **clone project**
    ### 2. **Install docker and docker-compose** https://www.docker.com/get-started
    ### 3. **go to project root**
-   ### 4. run on linux `sudo docker-compose build`
+   ### 4. run on linux `sudo docker-compose build or make all`
    ### 5. run `docker-compose up`
    ### 6. ???
    ### 7. Profit
