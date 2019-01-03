@@ -49,7 +49,7 @@ def _user_info_base(method, user_id, page, json_data=None):
     logger.warning('_user_info_base: {}, {}, {}'.format(method, user_id, json_data))
     response = requests.request(
         method=method,
-        url='users/{}{}'.format(URL, user_id),
+        url='{}users/{}'.format(URL, user_id),
         json=json_data,
     )
 
