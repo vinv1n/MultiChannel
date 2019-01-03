@@ -10,4 +10,6 @@ RUN /usr/bin/pip3 install -r requirements.txt
 
 EXPOSE 5000 6667
 
-CMD ["/usr/bin/python3", "run.py"]
+ENTRYPOINT ["/usr/bin/python3"]
+
+CMD ["run.py"]

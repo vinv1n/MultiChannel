@@ -172,6 +172,7 @@ class database_handler:
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
             return None
+
     def mark_message_seen(self, message_id, user_id):
         """
         Mark the given message seen by the user.
@@ -196,6 +197,7 @@ class database_handler:
                 }
             }
         }
+
         """
 
         # needs to be decided if user has messages or message have users
