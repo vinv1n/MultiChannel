@@ -1,6 +1,6 @@
 .PHONY : build
 build :
-	docker-compose build;
+	docker-compose build --no-start;
 
 .PHONY : clean
 clean :
@@ -11,3 +11,8 @@ clean :
 all :
 	docker-compose build;
 	docker-compose up;
+
+.PHONY : deamon
+deamon :
+	docker-compose build;
+	docker-compose up --detach;
