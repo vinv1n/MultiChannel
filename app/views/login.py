@@ -1,9 +1,8 @@
 import logging
 import requests
 from flask import render_template, request
+from app.views.utils import URL
 
-
-URL = 'http://127.0.0.1:5000'
 logger = logging.getLogger(__name__)
 
 

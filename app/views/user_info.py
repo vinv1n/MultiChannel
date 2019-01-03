@@ -3,8 +3,9 @@ import requests
 import json
 
 from flask import render_template, request, abort
+from app.views.utils import URL
 
-URL = 'http://127.0.0.1:5000/users/'
+
 logger = logging.getLogger(__name__)
 
 
@@ -48,7 +49,7 @@ def _user_info_base(method, user_id, page, json_data=None):
     logger.warning('_user_info_base: {}, {}, {}'.format(method, user_id, json_data))
     response = requests.request(
         method=method,
-        url='{}{}'.format(URL, user_id),
+        url='users/{}{}'.format(URL, user_id),
         json=json_data,
     )
 
