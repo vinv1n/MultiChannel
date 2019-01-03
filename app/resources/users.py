@@ -12,7 +12,7 @@ related to users. Trys to keep __init__.py clean.
 
 
 class Users(Resource):
-    
+
     """
     Resource to get and add users.
     """
@@ -20,25 +20,24 @@ class Users(Resource):
     def check_authorization(self):
         try:
             payload = get_jwt_identity()
-            if payload["admin"] == True:
+            if payload["admin"] is True:
                 return True
             else:
                 return False
         except Exception as e:
             return False
-    
+
     def __init__(self, db_handler, jwt):
         self.db_handler = db_handler
         self.jwt = jwt
-    
+
     @jwt_required
     def get(self):
         response = self.db_handler.get_users(self.check_authorization())
-        if response == None:
-            return {"Error" : "Error during data handling"}, 400
+        if response is None:
+            return {"Error": "Error during data handling"}, 400
         else:
             return {"Users": response}, 200
-
 
     def post(self):
         """ Post a new user to the database. Make a dictionary to pass to the db_handler."""
@@ -46,25 +45,22 @@ class Users(Resource):
         user_data = {}
         try:
             data = request.get_json()
-
             user_data["username"] = data.get("username")
             user_data["password"] = pbkdf2_sha256.encrypt(saslprep(data.get("password")), rounds=200000, salt_size=16)
             user_data["preferred_channel"] = data.get("preferred_channel")
             user_data["channels"] = data.get("channels")
             user_data["admin"] = False
         except Exception as e:
-            return {'Error' : "Malformed request / Error parsing data"}, 400
+            return {'Error': "Malformed request / Error parsing data"}, 400
 
         response = self.db_handler.create_user(user_data)
-    
 
         if response == "used":
-            return {'Error' : "Username already in use"}, 400
-        elif response == None:
-            return {"Error" : "Error during data handling"}
+            return {'Error': "Username already in use"}, 400
+        elif response is None:
+            return {"Error": "Error during data handling"}
         else:
-            return {"Message" : "User created","user_id": response}, 200
-
+            return {"Message": "User created", "user_id": response}, 200
 
 
 class UserSingle(Resource):
@@ -72,7 +68,7 @@ class UserSingle(Resource):
     Resource for getting, updating and deleting single users.
     """
     def check_authorization(self, user_id):
-        
+
         try:
             user = self.db_handler.get_user(user_id)
             payload = get_jwt_identity()
@@ -82,17 +78,16 @@ class UserSingle(Resource):
                 return False
         except Exception as e:
             return 0
-    
+
     def check_admin(self):
         try:
             payload = get_jwt_identity()
-            if payload["admin"] == True:
+            if payload["admin"] is True:
                 return True
             else:
                 return False
         except Exception as e:
             return 0
- 
 
     def __init__(self, db_handler, jwt):
         self.db_handler = db_handler
@@ -100,19 +95,18 @@ class UserSingle(Resource):
 
     @jwt_required
     def get(self, user_id):
-        if self.check_authorization(user_id) == True:
+        if self.check_authorization(user_id) is True:
             response = self.db_handler.get_user(user_id)
-            if response == None:
-                return {"Error":"Error during data handling"}, 400
+            if response is None:
+                return {"Error": "Error during data handling"}, 400
             else:
                 return {"User": response}, 200
         else:
             return{"Error": "Unauthorized"}, 401
-        
-    
+
     @jwt_required
     def patch(self, user_id):
-        if self.check_authorization(user_id) == True:
+        if self.check_authorization(user_id) is True:
             data = request.get_json()
             user_data = {}
             for key in data:
@@ -124,26 +118,25 @@ class UserSingle(Resource):
                     if data[key] not in ["email", "slack", "irc", "facebook", "telegram"]:
                         return {"Error": "Not modified. Channel unknown"}, 400
                 elif key == "password":
-                    user_data[str(key)]= pbkdf2_sha256.encrypt(saslprep(data["password"]), rounds=200000, salt_size=16)
+                    user_data[str(key)] = pbkdf2_sha256.encrypt(saslprep(data["password"]), rounds=200000, salt_size=16)
                 user_data[str(key)] = data.get(key)
             response = self.db_handler.update_user(user_data, user_id)
-            
+
             if response == 200:
-                return {"Message":"modified"}, response
+                return {"Message": "modified"}, response
             else:
                 return {"Error": "Not modified"}, response
         else:
             return{"Error": "Unauthorized"}, 401
 
-
     @jwt_required
     def delete(self, user_id):
-        if self.check_authorization(user_id) == True:
+        if self.check_authorization(user_id) is True:
             response = self.db_handler.delete_user(user_id)
-            if response == None:
+            if response is None:
                 return {"Error": "Error during data handling"}, 400
-            elif response == True:
-                return {"Message" : "User deleted"}
+            elif response is True:
+                return {"Message": "User deleted"}
             return {"Message": response}
         else:
             return{"Error": "Unauthorized"}, 401
