@@ -19,5 +19,11 @@ def _login_post(request):
     logger.warning(request.form)
     password = request.form['password']
     name = request.form['name']
-    data = {'password': password, 'name': name}
-    response = requests.post('{}/login'.format(URL), json=data)
+    data = {'password': password, 'username': name}
+    response = requests.post('{}/user-login'.format(URL), json=data)
+
+    msg = 'Status: {}'.format(response.status_code)
+    return render_template(
+        'response.html',
+        msg=msg,
+    )

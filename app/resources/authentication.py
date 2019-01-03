@@ -5,7 +5,7 @@ from passlib.hash import pbkdf2_sha256
 from passlib.utils import saslprep
 
 
-class Login(Resource):
+class UserLogin(Resource):
 
     def __init__(self, db_handler, jwt):
         self.db_handler = db_handler

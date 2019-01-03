@@ -9,7 +9,7 @@ from flask_restful import Api, reqparse
 from queue import Queue
 from app.resources.users import Users, UserSingle
 from app.resources.messages import Messages, MessageSingle, MessageSeen
-from app.resources.authentication import Login, Logout, RefreshLogin, RefreshLogout
+from app.resources.authentication import UserLogin, Logout, RefreshLogin, RefreshLogout
 
 # views for frontend stuff
 from app.views.index import index
@@ -68,11 +68,8 @@ def create_app(args):
     # Environment configuration
     app.config.from_object("config")
 
-    # views rules
-    app.add_url_rule(rule="/", endpoint="index", view_func=index)
-
     # Add webpage to app
-    webpage(app)
+    app = webpage(app)
 
     # Blueprints could be used?
     api = Api(app)
@@ -92,8 +89,8 @@ def create_app(args):
 
     # Resources
     api.add_resource(
-        Login,
-        "/api/login",
+        UserLogin,
+        "/api/user-login",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
     api.add_resource(
