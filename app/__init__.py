@@ -78,6 +78,10 @@ def create_app(args):
     app.config['JWT_SECRET_KEY'] = 'thisissecretfortesting123'
     app.config['JWT_BLACKLIST_ENABLED'] = True
     app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
+    app.config['JWT_TOKEN_LOCATION'] = ['cookies']
+    app.config['JWT_ACCESS_COOKIE_PATH'] = '/api/'
+    app.config['JWT_REFRESH_COOKIE_PATH'] = '/api/re-login'
+    app.config['JWT_COOKIE_CSRF_PROTECT'] = False
     jwt = JWTManager(app)
     blacklist = set()
 
