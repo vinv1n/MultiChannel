@@ -13,6 +13,8 @@ from app.resources.authentication import Login, Logout, RefreshLogin, RefreshLog
 
 # views for frontend stuff
 from app.views.index import index
+from app.views.webpage import webpage
+
 from app.database.db_handler import database_handler
 from app.resources.message_handler import Message_handler
 
@@ -68,6 +70,9 @@ def create_app(args):
 
     # views rules
     app.add_url_rule(rule="/", endpoint="index", view_func=index)
+
+    # Add webpage to app
+    webpage(app)
 
     # Blueprints could be used?
     api = Api(app)

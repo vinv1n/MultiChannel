@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+<div style="padding-left:16px">
+  <form method="post", action="">
+
+    <h2>New Message</h2>
+
+    <table><tr><td width="10%">
+	  <label for="fname">Sender</label></td>
+	<td width="100%"> <input type="text" id="fname" name="sender" placeholder="">
+      </td></tr>
+      <tr><td width="10%">
+	  <label for="fname">Body</label></td>
+	<td width="100%"> <textarea name="body" rows="4" cols="50"></textarea>
+      </td></tr>
+      <input type="radio" name="type" value="fnf"> Fire and Forget<br>
+      <input type="radio" name="type" value="traced"> A one way Traced message<br>
+      <input type="radio" name="type" value="answerable" checked> Answerable<br><br>
+      Group message : <input type="radio" name="group_message" value="True"> Yes
+      <input type="radio" name="group_message" value="False"> No<br></td> </tr>
+</table>
+
+<h3>{{result}}</h3>
+
+<input type="submit" value="Send">
+</form>
+</div>
+
+
+{% endblock %}

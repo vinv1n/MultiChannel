@@ -1,0 +1,30 @@
+{% extends "user_page_base.html" %}
+{% block title %}
+User Information
+{% endblock %}
+
+{% block main_form %}
+<form enctype="application/json" method="POST" action="">
+{% endblock %}
+
+{% block submit %}
+<input type="submit" value="Submit changes">
+{% endblock %}
+
+{% block name %}
+<tr>
+  <td width="10%">
+    <label for="fname">Username</label></td>
+  <td>{{username}}</td>
+</tr>
+{% endblock %}
+
+{% block bottom %}
+<form method="GET" action="">
+    <input type="hidden" name=delete_user value="TRUE"/>
+    <button type="submit">Delete account</button>
+</form>
+
+{% endblock %}
+
+
