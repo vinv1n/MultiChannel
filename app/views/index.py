@@ -1,6 +1,5 @@
-from flask import render_template
+from flask import render_template, redirect
 
-# functions for main view
-
+# redirect to webui
 def index():
-    return render_template("index.html")
+    return redirect(location="/webui/login", code=302)
