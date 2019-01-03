@@ -25,7 +25,7 @@ def _channel(body, _type, group, user, channel_info, _name):
     """
     logger.warning('This is channel {}'.format(_name))
     logger.warning('body: {}'.format(body))
-    logger.warning('type: {}'.format(_type))  
+    logger.warning('type: {}'.format(_type))
     logger.warning('group_message: {}'.format(group))
     logger.warning('user: {}'.format(user))
     logger.warning('Channel information: {}'.format(channel_info))
@@ -69,13 +69,10 @@ def create_app(args):
     # views rules
     app.add_url_rule(rule="/", endpoint="index", view_func=index)
 
-    # Blueprints could be used?
     api = Api(app)
     db_handler = database_handler()
     message_handler = Message_handler(channels=channels, _database_handler=db_handler)
-    app.config['JWT_SECRET_KEY'] = 'thisissecretfortesting123'
-    app.config['JWT_BLACKLIST_ENABLED'] = True
-    app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
+
     jwt = JWTManager(app)
     blacklist = set()
 
@@ -94,7 +91,7 @@ def create_app(args):
     api.add_resource(
         RefreshLogin,
         "/api/re-login", #Maybe change this to something that might be more suitable? Patch request to login?
-        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+        resource_class_kwargs={'db_handler': db_handler, 'jwt':jwt},
     )
     api.add_resource(
         Logout,
