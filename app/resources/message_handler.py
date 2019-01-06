@@ -44,29 +44,36 @@ class Message_handler:
         """Send the message to the users using their preferred channels.
         :param dictionary message: New message that is sent.
         :param list users: List of user IDs who the message is sent to.
+        If sending to a user fails, append it to error_list and return message is chosen accordingly.
         """
+        error_list = []
         _message = form_message(message, users)
         # Insert the newly created message into database
         message_id = self._database_handler.create_message(message_data=_message)
         if message_id is None:
-            # TODO: how to handle if message insertion fails?
+            # Return none, to return {'msg': 'Error. Could not post the message'}, 400
             return None
         
         user_informations = self._get_user_informations(users)
+        if user_informations == None:
+            return None
 
         for user_id, information in user_informations.items():
             preferred_channel = information['preferred_channel']
             if preferred_channel is None:
-                # TODO: what to do if no channel is preferred?
+                #Add to id to error_list and skip
+                error_list.append(user_id)
+                logger.warning("No preferred channel set. Skipping user: %s " %(str(user_id)))
                 pass
             
-            # TODO please add information why this HACK is done
-            # TODO REMOVE THIS HACK?
+
             _information = information['channels']
             channel_information = _information.get(preferred_channel)
             #channel_information = information['channels'].get(preferred_channel)
             if channel_information is None:
-                # TODO: how to handle if no channel information?
+                #Add to id to error_list and skip
+                error_list.append(user_id)
+                logger.warning("No channel info set. Skipping user: %s " %(str(user_id)))
                 pass
 
             try:
@@ -76,12 +83,19 @@ class Message_handler:
                     channel=preferred_channel,
                     channel_information=channel_information,
                 )
-            except Exception as e:  # TODO: Handle error somehow smarter
-                log.debug("Message could not be sent. Reason: %s", e)
+            except Exception as e:
+                log.debug("Message could not be sent. Reason: %s", e) #TODO: Try another channel or default email if not preferred?
                 success = False
+                #Add to id to error_list and skip
+                error_list.append(user_id)
             if success:
                 self._set_message_sent_for_user(user=user_id)
-        return message_id
+        
+        if len(error_list) = 0:
+            msg = "Successfully sent to all recipients"
+        else:
+            msg = "Error sending while sending message to users: "+str(error_list)
+        return message_id, msg
 
     def _get_user_informations(self, users):
         """
@@ -107,11 +121,13 @@ class Message_handler:
         """
         channel = self.channels.get(channel)
         if channel is None:
-            # TODO: what is the correct reaction when the channel doesn't exist?
+            # TODO: what is the correct reaction when the channel doesn't exist? 
+            # My take is to return, and log the fail to the error_list as this is a user configuration issue.
             return
         message_type = message.get('type')
         if message_type is None:
             # TODO: handle missing type
+            # This should be checked when posting the message.
             return
         body = message.get('body')
         group_message = message.get('group_message')
@@ -121,6 +137,7 @@ class Message_handler:
 
     def _set_message_sent_for_user(self, user):
         # TODO: this, use the database_handler
+        # This needs a patch for the posted message, or send before and append information before saving to database. (less resource intensive)
         pass
 
 def form_message(message, users):

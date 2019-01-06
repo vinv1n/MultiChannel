@@ -56,7 +56,7 @@ class Messages(Resource):
                 return {'msg' : "Error, malformed request. Include 'message' and 'sent_to' as a list of users"}, 400
             message_id = self.message_handler.send_message(
                 message = args["message"],
-                    #sender = get_jwt_identity(),
+                #sender = get_jwt_identity() #get sender from jwt?
                 users = args["sent_to"]
             )
             if message_id != None:
