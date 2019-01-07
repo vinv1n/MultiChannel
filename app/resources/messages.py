@@ -47,17 +47,32 @@ class Messages(Resource):
         """
         Send a new message.
         """
+
+        message_schema={
+            'type': 'object',
+                'properties':{
+                    'message':{ 'type': 'string', 'minLength': 2, 'maxLength': 500 },
+                    'sender':{ 'type': 'string', 'minLength': 4, 'maxLength': 20 },
+                    'sent_to':{ 'type': 'array', 'contains':{'type':'string'} }
+                },
+                'required': [ 'message', 'sender', 'password' ],
+                'additionalProperties': False
+    }
+        try:
+            validate(request.json,login_schema)
+        except Exception as e:
+            error_msg = str(e).split("\n")
+            return {"msg": "error with input data:"+ str(error_msg[0])}, 400
+
         if self.check_authorization() == True:
-            try:
-                args = {}
-                data = request.get_json()
-                args['message'] = data['message']
-                args['sent_to'] = data['sent_to']
-            except Exception as e:
-                return {'msg' : "Error, malformed request. Include 'message' and 'sent_to' as a list of users"}, 400
+            args = {}
+            data = request.get_json()
+            args['message'] = data['message']
+            args['sender'] = data['sender']
+            args['sent_to'] = data['sent_to']
             message_id, msg = self.message_handler.send_message(
                 message = args["message"],
-                sender = get_jwt_identity(), #get sender from jwt?
+                sender = get_jwt_identity(),
                 users = args["sent_to"],
                 timestamp = datetime.utcnow(),
             )
