@@ -1,3 +1,4 @@
+import datetime
 from flask import request
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -54,13 +55,14 @@ class Messages(Resource):
                 args['sent_to'] = data['sent_to']
             except Exception as e:
                 return {'msg' : "Error, malformed request. Include 'message' and 'sent_to' as a list of users"}, 400
-            message_id = self.message_handler.send_message(
+            message_id, msg = self.message_handler.send_message(
                 message = args["message"],
-                #sender = get_jwt_identity() #get sender from jwt?
-                users = args["sent_to"]
+                sender = get_jwt_identity(), #get sender from jwt?
+                users = args["sent_to"],
+                timestamp = datetime.utcnow(),
             )
             if message_id != None:
-                return {'message_id': message_id}
+                return {'message_id': message_id, 'msg' : msg}
             else:
                 return {'msg': 'Error. Could not post the message'}, 400
         else:

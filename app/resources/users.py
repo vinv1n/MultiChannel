@@ -42,6 +42,23 @@ class Users(Resource):
     def post(self):
         """ Post a new user to the database. Make a dictionary to pass to the db_handler."""
 
+        user_schema={
+            'type': 'object',
+                'properties':{
+                    'username':{ 'type': 'string', 'minLength': 4, 'maxLength': 20 },
+                    'password':{ 'type': 'string', 'minLength': 4, 'maxLength': 32 },
+                    'preferred_channel':{ 'type': 'string', 'enum': ['email','facebook','telegram','irc','slack'] },
+                    'channels':{'type':'dict'}
+                },
+                'required': [ 'username', 'password', 'preferred_channel', 'channels' ],
+                'additionalProperties': False
+    }
+        try:
+            validate(request.json,user_schema)
+        except Exception as e:
+            error_msg = str(e).split("\n")
+            return {"msg": "error with input data:"+ str(error_msg[0])}
+
         user_data = {}
         try:
             data = request.get_json()
@@ -106,6 +123,24 @@ class UserSingle(Resource):
 
     @jwt_required
     def patch(self, user_id):
+        user_schema={
+            'type': 'object',
+                'properties':{
+                    'admin':{'type': 'bool', 'enum':[True,False]},
+                    'username':{ 'type': 'string', 'minLength': 4, 'maxLength': 20 },
+                    'password':{ 'type': 'string', 'minLength': 4, 'maxLength': 32 },
+                    'preferred_channel':{ 'type': 'string', 'enum': ['email','facebook','telegram','irc','slack'] },
+                    'channels':{'type':'dict'}
+                },
+                'required': [ ],
+                'additionalProperties': False
+    }
+        try:
+            validate(request.json,user_schema)
+        except Exception as e:
+            error_msg = str(e).split("\n")
+            return {"msg": "error with input data:"+ str(error_msg[0])}
+
         if self.check_authorization(user_id) is True:
             data = request.get_json()
             user_data = {}
