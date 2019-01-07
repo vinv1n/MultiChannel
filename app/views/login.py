@@ -1,6 +1,6 @@
 import logging
 import requests
-from flask import render_template, request
+from flask import render_template, request, make_response
 from app.views.utils import URL
 
 logger = logging.getLogger(__name__)
@@ -19,5 +19,13 @@ def _login_post(request):
     logger.warning(request.form)
     password = request.form['password']
     name = request.form['name']
-    data = {'password': password, 'name': name}
-    response = requests.post('{}/login'.format(URL), json=data)
+    data = {'password': password, 'username': name}
+    response = requests.post('{}/user-login'.format(URL), json=data)
+
+    #Hack to forward cookies to browser.
+    msg = 'Status: {}'.format(response.status_code)
+    resp = make_response(render_template('response.html',msg=msg))
+    resp.set_cookie('access_token_cookie', value=response.cookies.get('access_token_cookie'))
+    resp.set_cookie('refresh_token_cookie', value=response.cookies.get('refresh_token_cookie'))
+    return resp
+

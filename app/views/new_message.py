@@ -23,7 +23,7 @@ def _new_message_post(request):
         'message': msg,
         'users': users,
     }
-    response = requests.post('{}/messages'.format(URL), json=data)
+    response = requests.post('{}/messages'.format(URL), json=data, cookies=request.cookies)
     if response.status_code == 200:
         return render_template(
             'new_message.html',
@@ -38,7 +38,7 @@ def _new_message_post(request):
 
 
 def _get_users():
-    response = requests.get('{}/users'.format(URL))
+    response = requests.get('{}/users'.format(URL), cookies=request.cookies)
     if response.status_code == 200:
         users = response.json().get('users', [])
         ids = [user.get('_id') for user in users]

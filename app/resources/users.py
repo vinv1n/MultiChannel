@@ -35,7 +35,7 @@ class Users(Resource):
     def get(self):
         response = self.db_handler.get_users(self.check_authorization())
         if response is None:
-            return {"Error": "Error during data handling"}, 400
+            return {"msg": "Error during data handling"}, 400
         else:
             return {"Users": response}, 200
 
@@ -51,16 +51,16 @@ class Users(Resource):
             user_data["channels"] = data.get("channels")
             user_data["admin"] = False
         except Exception as e:
-            return {'Error': "Malformed request / Error parsing data"}, 400
+            return {'msg': "Malformed request / Error parsing data"}, 400
 
         response = self.db_handler.create_user(user_data)
 
         if response == "used":
-            return {'Error': "Username already in use"}, 400
+            return {'msg': "Username already in use"}, 400
         elif response is None:
-            return {"Error": "Error during data handling"}
+            return {"msg": "Error during data handling"}
         else:
-            return {"Message": "User created", "user_id": response}, 200
+            return {"msg": "User created", "user_id": response}, 200
 
 
 class UserSingle(Resource):
@@ -98,11 +98,11 @@ class UserSingle(Resource):
         if self.check_authorization(user_id) is True:
             response = self.db_handler.get_user(user_id)
             if response is None:
-                return {"Error": "Error during data handling"}, 400
+                return {"msg": "Error during data handling"}, 400
             else:
                 return {"User": response}, 200
         else:
-            return{"Error": "Unauthorized"}, 401
+            return{"msg": "Unauthorized"}, 401
 
     @jwt_required
     def patch(self, user_id):
@@ -123,20 +123,20 @@ class UserSingle(Resource):
             response = self.db_handler.update_user(user_data, user_id)
 
             if response == 200:
-                return {"Message": "modified"}, response
+                return {"msg": "modified"}, response
             else:
-                return {"Error": "Not modified"}, response
+                return {"msg": "Not modified"}, response
         else:
-            return{"Error": "Unauthorized"}, 401
+            return{"msg": "Unauthorized"}, 401
 
     @jwt_required
     def delete(self, user_id):
         if self.check_authorization(user_id) is True:
             response = self.db_handler.delete_user(user_id)
             if response is None:
-                return {"Error": "Error during data handling"}, 400
+                return {"msg": "Error during data handling"}, 400
             elif response is True:
-                return {"Message": "User deleted"}
-            return {"Message": response}
+                return {"msg": "User deleted"}
+            return {"msg": response}
         else:
-            return{"Error": "Unauthorized"}, 401
+            return{"msg": "Unauthorized"}, 401

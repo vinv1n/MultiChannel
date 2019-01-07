@@ -51,6 +51,7 @@ def _user_info_base(method, user_id, page, json_data=None):
         method=method,
         url='{}/users/{}'.format(URL, user_id),
         json=json_data,
+        cookies=request.cookies,
     )
 
     if response.status_code != 200:
