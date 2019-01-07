@@ -5,11 +5,14 @@ import queue
 
 from flask import Flask, render_template
 from flask_restful import Api, reqparse
+from flask_json_schema import JsonSchema, JsonValidationError
 
 from queue import Queue
 from app.resources.users import Users, UserSingle
 from app.resources.messages import Messages, MessageSingle, MessageSeen
 from app.resources.authentication import Login, Logout, RefreshLogin, RefreshLogout
+
+from app.error_handlers import json_validation_error
 
 # views for frontend stuff
 from app.views.index import index
@@ -27,7 +30,7 @@ def _channel(body, _type, group, user, channel_info, _name):
     """
     logger.warning('This is channel {}'.format(_name))
     logger.warning('body: {}'.format(body))
-    logger.warning('type: {}'.format(_type))  
+    logger.warning('type: {}'.format(_type))
     logger.warning('group_message: {}'.format(group))
     logger.warning('user: {}'.format(user))
     logger.warning('Channel information: {}'.format(channel_info))
@@ -62,14 +65,22 @@ def create_app(args):
 
     :return: preconfigured api
     """
+
     logger.debug("Creating Api")
     app = Flask(__name__)
+
+    # register json validation schema
+    # NOTE: needs to be passed to different views and register specific schema
+    schema = JsonSchema(app)
 
     # Environment configuration
     app.config.from_object("config")
 
     # views rules
     app.add_url_rule(rule="/", endpoint="index", view_func=index)
+
+    # custom error handler for json validation errors
+    app.register_error_handler(JsonValidationError, json_validation_error)
 
     # Add webpage to app
     webpage(app)
@@ -94,7 +105,7 @@ def create_app(args):
     api.add_resource(
         Login,
         "/api/login",
-        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, "schema": schema},
     )
     api.add_resource(
         RefreshLogin,
@@ -114,7 +125,7 @@ def create_app(args):
     api.add_resource(
         Users,
         "/api/users",
-        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, "schema": schema},
     )
     api.add_resource(
         UserSingle,
