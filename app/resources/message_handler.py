@@ -39,7 +39,7 @@ class Message_handler:
         else:
             self._database_handler = _database_handler
 
-    def send_message(self, message, users):
+    def send_message(self, message):
         
         """Send the message to the users using their preferred channels.
         :param dictionary message: New message that is sent.
@@ -47,24 +47,28 @@ class Message_handler:
         If sending to a user fails, append it to error_list and return message is chosen accordingly.
         """
         error_list = []
-        _message = form_message(message, users)
+        users = message.get('users')
+        _message = form_message(message)
         # Insert the newly created message into database
         message_id = self._database_handler.create_message(message_data=_message)
         if message_id is None:
-            # Return none, to return {'msg': 'Error. Could not post the message'}, 400
-            return None
+             return None # Return none, to return {'msg': 'Error. Could not post the message'}, 400
         
         user_informations = self._get_user_informations(users)
         if user_informations == None:
             return None
 
         for user_id, information in user_informations.items():
-            preferred_channel = information['preferred_channel']
-            if preferred_channel is None:
-                #Add to id to error_list and skip
+            try:
+                preferred_channel = information['preferred_channel']
+                if preferred_channel is None:
+                    error_list.append(user_id)
+                    logger.warning("No preferred channel set. Skipping user: %s " %(str(user_id)))
+                    pass
+            except Exception as e:
                 error_list.append(user_id)
-                logger.warning("No preferred channel set. Skipping user: %s " %(str(user_id)))
                 pass
+            
             
 
             _information = information['channels']
@@ -140,14 +144,15 @@ class Message_handler:
         # This needs a patch for the posted message, or send before and append information before saving to database. (less resource intensive)
         pass
 
-def form_message(message, users):
+def form_message(message):
     receivers = dict()
-    for user in users:
+    for user in message['users']:
         receivers[user] = {'sent': False, 'seen': False, 'answer': ''}
     formed_message = {
-        'body': message,
-        #'type': message['type'],
-        #'group_message': message['group_message'],
-        'receivers': receivers
+        'message': message['message'],
+        'type': message['type'],
+        'group_message': message['group_message'],
+        'receivers': receivers,
+        'timestamp': message['timestamp']
     }
     return formed_message

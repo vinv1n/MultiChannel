@@ -5,6 +5,8 @@
 <table class="table table-bordered table-dark">
   <thead>
     <tr>
+      <th scope="col">ID</th>
+      <th scope="col">Body</th>
       <th scope="col">Date</th>
       <th scope="col">Type</th>
     </tr>
@@ -13,6 +15,8 @@
     {% for message in messages %}
     <tr>
       <td><a href="/webui/message_status/{{message.get('_id')}}">{{message.get('_id')}}</a></td>
+      <td>{{message.get('message')}}</td>
+      <td>{{message.get('timestamp')}}</td>
       <td>{{message.get('type')}}</td>
     </tr>
     {% endfor %}

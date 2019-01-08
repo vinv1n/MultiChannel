@@ -16,11 +16,11 @@ def login():
 
 
 def _login_post(request):
-    logger.warning(request.form)
     password = request.form['password']
     name = request.form['name']
     data = {'password': password, 'username': name}
     response = requests.post('{}/user-login'.format(URL), json=data)
+
 
     #Hack to forward cookies to browser.
     msg = 'Status: {}'.format(response.status_code)
