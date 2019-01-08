@@ -4,6 +4,9 @@ from app.views.sign_up import sign_up
 from app.views.history import history
 from app.views.message_status import message_status
 from app.views.user_info import user_info
+from app.views.home import home
+from app.views.refresh_login import refresh_login
+from app.views.user_list import user_list
 
 
 def webpage(app):
@@ -11,6 +14,19 @@ def webpage(app):
     This function adds to a flask app the logic
     for the webpage.
     """
+    app.add_url_rule(
+        rule="/webui/home",
+        endpoint="home",
+        view_func=home,
+        methods=['GET'],
+    )
+
+    app.add_url_rule(
+        rule="/webui/re-login",
+        endpoint="re-login",
+        view_func=refresh_login,
+        methods=['GET'],
+    )
 
     app.add_url_rule(
         rule="/webui/login",
@@ -44,6 +60,13 @@ def webpage(app):
         rule="/webui/history",
         endpoint="history",
         view_func=history,
+        methods=['GET'],
+    )
+
+    app.add_url_rule(
+        rule="/webui/user_list",
+        endpoint="user_list",
+        view_func=user_list,
         methods=['GET'],
     )
 
