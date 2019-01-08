@@ -91,7 +91,7 @@ class Message_handler:
             if success:
                 self._set_message_sent_for_user(user=user_id)
         
-        if len(error_list) = 0:
+        if len(error_list) == 0:
             msg = "Successfully sent to all recipients"
         else:
             msg = "Error sending while sending message to users: "+str(error_list)

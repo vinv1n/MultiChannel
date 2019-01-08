@@ -1,3 +1,4 @@
+import datetime
 from flask import request
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -46,21 +47,37 @@ class Messages(Resource):
         """
         Send a new message.
         """
+
+        message_schema={
+            'type': 'object',
+                'properties':{
+                    'message':{ 'type': 'string', 'minLength': 2, 'maxLength': 500 },
+                    'sender':{ 'type': 'string', 'minLength': 4, 'maxLength': 20 },
+                    'sent_to':{ 'type': 'array', 'contains':{'type':'string'} }
+                },
+                'required': [ 'message', 'sender', 'password' ],
+                'additionalProperties': False
+    }
+        try:
+            validate(request.json,login_schema)
+        except Exception as e:
+            error_msg = str(e).split("\n")
+            return {"msg": "error with input data:"+ str(error_msg[0])}, 400
+
         if self.check_authorization() == True:
-            try:
-                args = {}
-                data = request.get_json()
-                args['message'] = data['message']
-                args['sent_to'] = data['sent_to']
-            except Exception as e:
-                return {'msg' : "Error, malformed request. Include 'message' and 'sent_to' as a list of users"}, 400
-            message_id = self.message_handler.send_message(
+            args = {}
+            data = request.get_json()
+            args['message'] = data['message']
+            args['sender'] = data['sender']
+            args['sent_to'] = data['sent_to']
+            message_id, msg = self.message_handler.send_message(
                 message = args["message"],
-                #sender = get_jwt_identity() #get sender from jwt?
-                users = args["sent_to"]
+                sender = get_jwt_identity(),
+                users = args["sent_to"],
+                timestamp = datetime.utcnow(),
             )
             if message_id != None:
-                return {'message_id': message_id}
+                return {'message_id': message_id, 'msg' : msg}
             else:
                 return {'msg': 'Error. Could not post the message'}, 400
         else:

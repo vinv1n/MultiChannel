@@ -4,18 +4,36 @@ from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_r
     set_refresh_cookies, unset_jwt_cookies)
 from passlib.hash import pbkdf2_sha256
 from passlib.utils import saslprep
-
+from jsonschema import validate
 
 class UserLogin(Resource):
 
     def __init__(self, db_handler, jwt):
         self.db_handler = db_handler
         self.jwt = jwt
-    
+
+
+   
     def post(self):
+
+        login_schema={
+            'type': 'object',
+                'properties':{
+                    'username':{ 'type': 'string', 'minLength': 4, 'maxLength': 20 },
+                    'password':{ 'type': 'string', 'minLength': 4, 'maxLength': 32 }
+                },
+                'required': [ 'username', 'password' ],
+                'additionalProperties': False
+    }
+        try:
+            validate(request.json,login_schema)
+        except Exception as e:
+            error_msg = str(e).split("\n")
+            return {"msg": "error with input data:"+ str(error_msg[0])}
+
         parser = reqparse.RequestParser()
-        parser.add_argument("username",location="json",required=True)
-        parser.add_argument("password",location="json",required=True)
+        parser.add_argument("username",location="json")
+        parser.add_argument("password",location="json")
         args = parser.parse_args()
 
 
