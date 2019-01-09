@@ -14,7 +14,7 @@
   <tbody>
     {% for user in users %}
     <tr>
-      <td><a href="/webui/user_info/<string:user_id>"">{{user.get('_id')}}</a></td>
+      <td><a href="/webui/users/{{user.get('_id')}}">{{user.get('_id')}}</a></td>
       <td>{{user.get('username')}}</td>
       <td>{{user.get('preferred_channel')}}</td>
       <td>{{user.get('admin')}}</td>

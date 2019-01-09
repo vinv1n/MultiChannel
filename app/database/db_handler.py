@@ -200,9 +200,9 @@ class database_handler:
             for item in cursor:
                 for key in item:
                     if key == "_id":
-                        user.update({ key : str(item[key]) })
+                        message.update({ key : str(item[key]) })
                     else:
-                        user.update({ key : item[key] })
+                        message.update({ key : item[key] })
             return message
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)

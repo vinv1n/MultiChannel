@@ -19,6 +19,7 @@ def user_info(user_id):
         patching_data = _parse_patching_data(request)
 
         return _user_info_base(
+            request = request,
             method='PATCH',
             user_id=user_id,
             page=_user_patched,
@@ -31,6 +32,7 @@ def user_info(user_id):
     elif request.args.get('delete_user') == 'TRUE':
 
         return _user_info_base(
+            request = request,
             method='DELETE',
             user_id=user_id,
             page=_user_deleted,
@@ -39,20 +41,16 @@ def user_info(user_id):
     else:
 
         return _user_info_base(
+            request = request,
             method='GET',
             user_id=user_id,
             page=_user_info_page,
         )
 
 
-def _user_info_base(method, user_id, page, json_data=None):
-    logger.warning('_user_info_base: {}, {}, {}'.format(method, user_id, json_data))
-    response = requests.request(
-        method=method,
-        url='{}users/{}'.format(URL, user_id),
-        json=json_data,
-        cookies=request.cookies,
-    )
+def _user_info_base(request, method, user_id, page, json_data=None):
+    
+    response = requests.get('{}/users/{}'.format(URL, user_id), cookies=request.cookies)
 
     if response.status_code != 200:
         abort(response.status_code)
@@ -71,19 +69,21 @@ def _user_info_page(response):
         return _user_not_found()
 
     # hack
-    _channels = json.loads(_user_data.get('channels', {}).replace("'", '"'))
+    _channels = _user_data.get('channels', {})
 
     username = _user_data.get('username', '')
+    admin = _user_data.get('admin', '')
     email = _channels.get('email', {}).get('address', '')
     irc_nick = _channels.get('irc', {}).get('nickname', '')
     irc_network = _channels.get('irc', {}).get('network', '')
-    slack_username = 'placeholder'
-    slack_channel = 'placeholder'
+    slack_username = _channels.get('slack', {}).get('username', '')
+    slack_channel = _channels.get('slack', {}).get('channel', '')
     telegram_username = _channels.get('telegram', {}).get('user_id', '')
 
     return render_template(
         'user_info.html',
         username=username,
+        admin=admin,
         email=email,
         irc_nick=irc_nick,
         irc_network=irc_network,

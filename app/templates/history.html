@@ -14,7 +14,7 @@
   <tbody>
     {% for message in messages %}
     <tr>
-      <td><a href="/webui/message_status/{{message.get('_id')}}">{{message.get('_id')}}</a></td>
+      <td><a href="/webui/messages/{{message.get('_id')}}">{{message.get('_id')}}</a></td>
       <td>{{message.get('message')}}</td>
       <td>{{message.get('timestamp')}}</td>
       <td>{{message.get('type')}}</td>
