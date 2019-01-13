@@ -46,8 +46,7 @@ def _message_status(request, message_id):
 
 
 def _format_message_status_template(message):
-    # Hack, because the receivers in string and not proper json as it should me
-    receivers = json.loads(message.get('receivers').replace("'", '"').replace('False', 'false'))
+    receivers = message.get('receivers')
     show_answers = True if message.get('type', 'fnf') != 'fnf' else False
     return render_template(
         'message_status.html',

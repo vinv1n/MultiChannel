@@ -2,6 +2,7 @@ import datetime
 from flask import request
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from jsonschema import validate
 
 class Messages(Resource):
     """
@@ -36,7 +37,7 @@ class Messages(Resource):
                 if response == None:
                     return {"msg": "Error during data handling"}, 400
                 else:
-                    return {'Messages': response}, 200
+                    return {'messages': response}, 200
             except Exception as e:
                 return {"msg": "Error during data handling"}, 400
         else:
@@ -53,29 +54,32 @@ class Messages(Resource):
                 'properties':{
                     'message':{ 'type': 'string', 'minLength': 2, 'maxLength': 500 },
                     'sender':{ 'type': 'string', 'minLength': 4, 'maxLength': 20 },
-                    'sent_to':{ 'type': 'array', 'contains':{'type':'string'} }
+                    'users':{ 'type': 'array', 'contains':{'type':'string'} },
+                    'type':{ 'type': 'string', 'enum':['fnf','answerable', 'traced'] },
+                    'group_message':{ 'type': 'string', 'enum':['True', 'False'] }
+
                 },
-                'required': [ 'message', 'sender', 'password' ],
+                'required': [ 'message', 'users', 'sender', 'type', 'group_message' ],
                 'additionalProperties': False
     }
         try:
-            validate(request.json,login_schema)
+            validate(request.json,message_schema)
         except Exception as e:
             error_msg = str(e).split("\n")
             return {"msg": "error with input data:"+ str(error_msg[0])}, 400
 
         if self.check_authorization() == True:
+            
             args = {}
             data = request.get_json()
             args['message'] = data['message']
             args['sender'] = data['sender']
-            args['sent_to'] = data['sent_to']
-            message_id, msg = self.message_handler.send_message(
-                message = args["message"],
-                sender = get_jwt_identity(),
-                users = args["sent_to"],
-                timestamp = datetime.utcnow(),
-            )
+            args['users'] = data['users']
+            args['type'] = data['type']
+            args['group_message'] = data['group_message']
+            args['timestamp'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            message_id, msg = self.message_handler.send_message(args)
             if message_id != None:
                 return {'message_id': message_id, 'msg' : msg}
             else:
@@ -112,7 +116,7 @@ class MessageSingle(Resource):
         if self.check_authorization() == True:
             message = self.db_handler.get_message(message_id)
             if message != {} or message != None:
-                return {'Message': message}, 200
+                return {'message': message}, 200
             else:
                 return {"msg": "No messages with id:"+message_id}, 404
         else:

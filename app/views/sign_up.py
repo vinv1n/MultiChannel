@@ -24,7 +24,7 @@ def _sign_up_post(request):
     if response.status_code == 200:
         msg = 'New user created!'
     else:
-        msg = 'Error while creating user: {}'.format(response.status_code)
+        msg = 'Error while creating user: {}'.format(response.json().get('msg'))
 
     return render_template(
         'response.html',
@@ -34,17 +34,16 @@ def _sign_up_post(request):
 
 def _sign_up_html_parser(form):
     form_dict = form.to_dict(flat=False)
-    logger.warning(form_dict)
-
-    return {
-        "username": form_dict['username'],
-        "password": form_dict['password'],
-        "preferred_channel": form_dict['preferred_channel'],
+    user_data = {
+        "username": form_dict['username'][0],
+        "password": form_dict['password'][0],
+        "preferred_channel": form_dict['preferred_channel'][0],
         "channels": {
-            "email": {"address": form_dict['email_address']},
-            # "facebook": {"user_id": form_dict['facebook']},
-            "telegram": {"user_id": form_dict['telegram']},
-            "irc": {"nickname": form_dict['irc_nick'], "network": form_dict['irc_network']},
-            # "slack": {"channel": slack_channel, "username": slack_user},
+            "email": {"address": form_dict['email_address'][0]},
+            "facebook": {"user_id": form_dict['facebook'][0]},
+            "telegram": {"user_id": form_dict['telegram'][0]},
+            "irc": {"nickname": form_dict['irc_nick'][0], "network": form_dict['irc_network'][0]},
+            "slack": {"channel": form_dict['slack_channel'][0], "username": form_dict['slack_user'][0]},
         }
     }
+    return user_data

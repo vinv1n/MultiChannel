@@ -37,7 +37,7 @@ class Users(Resource):
         if response is None:
             return {"msg": "Error during data handling"}, 400
         else:
-            return {"Users": response}, 200
+            return {"users": response}, 200
 
     def post(self):
         """ Post a new user to the database. Make a dictionary to pass to the db_handler."""
