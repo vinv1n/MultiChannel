@@ -32,10 +32,12 @@ def _login_post(request):
 
     if admin:
         resp = make_response(render_template('home.html'))
+        location = 'home'
     else:
         user_id = decoded_token.get('identity', {}).get('_id')
-        resp = redirect(location='/webui/users/{}'.format(user_id), code=302)
+        location = 'users/{}'.format(user_id)
 
+    resp = redirect(location='/webui/{}'.format(location), code=302)
     resp.set_cookie('access_token_cookie', value=access_token)
     resp.set_cookie('refresh_token_cookie', value=refresh_token)
     return resp
