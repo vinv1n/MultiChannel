@@ -22,32 +22,24 @@ class database_handler:
             self.database = Mongo("multichannel")
 
 
-    def get_users(self, admin):
+    def get_users(self):
         """
         :return: list of user IDs.
         """
         try:
             envelope = []
             cursor =  self.database.user_collection.find({ })
-            
-            if admin == True:
-                for item in cursor:
-                    user = {}
-                    for key in item:
-                        if key == "password":
-                            pass
-                        elif key == "_id":
-                            user[key] = str(item[key])
-                        else:
-                            user[key] = item[key]
-                    envelope.append(user)
 
-            else:
-                for item in cursor:
-                    user = {}
-                    user["_id"] = str(item["_id"])
-                    user["username"] = item["username"]
-                    envelope.append(user)
+            for item in cursor:
+                user = {}
+                for key in item:
+                    if key == "password":
+                        pass
+                    elif key == "_id":
+                        user[key] = str(item[key])
+                    else:
+                        user[key] = item[key]
+                envelope.append(user)
 
             return envelope
         except Exception as e:

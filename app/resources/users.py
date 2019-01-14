@@ -33,7 +33,10 @@ class Users(Resource):
 
     @jwt_required
     def get(self):
-        response = self.db_handler.get_users(self.check_authorization())
+        authorized = self.check_authorization()
+        if not authorized:
+            return {"msg": "Action not authorized."}, 401
+        response = self.db_handler.get_users()
         if response is None:
             return {"msg": "Error during data handling"}, 400
         else:
