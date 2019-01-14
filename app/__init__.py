@@ -10,7 +10,8 @@ from flask_json_schema import JsonSchema, JsonValidationError
 from queue import Queue
 from app.resources.users import Users, UserSingle
 from app.resources.messages import Messages, MessageSingle, MessageSeen
-from app.resources.authentication import Login, Logout, RefreshLogin, RefreshLogout
+from app.resources.updates import Update
+from app.resources.authentication import UserLogin, Logout, RefreshLogin, RefreshLogout
 
 from app.error_handlers import json_validation_error
 
@@ -42,7 +43,7 @@ channels = {
     'slack': partial(_channel, _name='slack'),"""
 }
 
-
+# for log file
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s:%(name)-s:%(levelname)s %(message)s",
                         datefmt="%a, %d %b %Y %H:%M:%S", filemode="w", filename="/tmp/multi.log")
 
@@ -83,15 +84,12 @@ def create_app(args):
     app.register_error_handler(JsonValidationError, json_validation_error)
 
     # Add webpage to app
-    webpage(app)
+    app = webpage(app)
 
-    # Blueprints could be used?
     api = Api(app)
     db_handler = database_handler()
     message_handler = Message_handler(channels=channels, _database_handler=db_handler)
-    app.config['JWT_SECRET_KEY'] = 'thisissecretfortesting123'
-    app.config['JWT_BLACKLIST_ENABLED'] = True
-    app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
+
     jwt = JWTManager(app)
     blacklist = set()
 
@@ -103,14 +101,20 @@ def create_app(args):
 
     # Resources
     api.add_resource(
+<<<<<<< HEAD
         Login,
         "/api/login",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, "schema": schema},
+=======
+        UserLogin,
+        "/api/user-login",
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+>>>>>>> master
     )
     api.add_resource(
         RefreshLogin,
         "/api/re-login", #Maybe change this to something that might be more suitable? Patch request to login?
-        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+        resource_class_kwargs={'db_handler': db_handler, 'jwt':jwt},
     )
     api.add_resource(
         Logout,
@@ -146,6 +150,12 @@ def create_app(args):
         MessageSeen,
         "/api/messages/<string:message_id>/<string:seen_id>",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+    )
+    # enpoint to update messages to database
+    api.add_resource(
+        Update,
+        "/api/channels/update",
+        resource_class_kwargs={'db_handler': db_handler, "channels": channels},
     )
 
     logger.info("Init channels is done")

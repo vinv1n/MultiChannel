@@ -53,3 +53,5 @@ def webpage(app):
         view_func=message_status,
         methods=['GET', 'DELETE'],
     )
+
+    return app
