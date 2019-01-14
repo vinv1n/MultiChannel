@@ -1,5 +1,7 @@
 import pymongo
 import logging
+from passlib.hash import pbkdf2_sha256
+from passlib.utils import saslprep
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -24,6 +26,7 @@ class Mongo:
             raise Exception("Failure in database creation")
 
         self._create_default_collections()
+        self._create_admin()
 
     def _create_database(self, name):
         try:
@@ -42,3 +45,25 @@ class Mongo:
     def _create_default_collections(self):
         self.user_collection = self.database['users']
         self.message_collection = self.database['messages']
+
+    def _create_admin(self):
+        admin_data = {
+"username": "admin",
+"password": pbkdf2_sha256.encrypt(saslprep("admin")),
+"admin" : True,
+"preferred_channel": "email",
+"channels": {
+            "email": {"address": "adderss@server.fi"},
+            "facebook": {"user_id": "user"},
+            "telegram": {"user_id": "user"},
+            "irc": {"nickname": "user", "network": "user"},
+            "slack": {"channel": "user","username": "user"}
+           }
+}
+        
+        cursor =  self.user_collection.find({'username': 'admin'})
+        if cursor.count() == 0:
+            self.user_collection.insert_one(admin_data)
+            return
+        else:
+            return

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="padding-left:16px">
+  <h2>Message Status</h2>
+  
+  <table class="table">
+    <tr><td width="10%">
+	<label for="fname">ID</label></td>
+      <td>{{message.get('_id')}}</td></tr>
+    <tr><td width="10%">
+	<label for="fname">Date</label></td>
+      <td>INSERT DATE</td></tr>
+    <tr><td width="10%">
+	<label for="fname">Type</label></td>
+      <td>{{message.get('type')}}</td></tr>
+    <tr><td width="10%">
+	<label for="fname">Group Message</label></td>
+      <td>{{message.get('group_message')}}</td></tr>
+    <!-- <tr><td width="10%"> -->
+	<!-- <label for="fname">Body</label></td> -->
+      <!-- <td><p>{{message.get('body')}}</p></td></tr> -->
+  </table>
+
+<h2>Message Body</h2>
+<p>{{message.get('body')}}</p>
+
+{% if show_answers %}
+  <h2>Answers</h2>
+<table class="table table-bordered table-dark">
+  <thead>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Seen</th>
+      <th scope="col">Answer</th>
+    </tr>
+  </thead>
+  <tbody>
+    {%for receiver in receivers%}
+    <tr>
+      <th scope="row">{{receivers[receiver].get('username')}}</th>
+      <td>{{receivers[receiver].get('seen')}}</td>
+      <td>{{receivers[receiver].get('answer')}}</td>
+    </tr>
+    </tr>
+    {%endfor%}
+  </tbody>
+	</table>
+{% endif %}
+
+</div>
+{% endblock %}
