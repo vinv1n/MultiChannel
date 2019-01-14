@@ -1,6 +1,8 @@
 import smtplib
 import logging
+import easyimap
 import os
+import threading
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -11,15 +13,20 @@ logger = logging.getLogger(__name__)
 
 class EmailHandler:
 
-    def __init__(self, password, address, host=None, port=587):
+    def __init__(self, password, address, imap_sever, database, host=None, port=587):
 
         if host:
             self.server = smtplib.SMTP(host=host, port=port)
         else:
             self.server = smtplib.SMTP("smtp.gmail.com", port=587)
 
+        self.db = database
+        self.imap_server = imap_sever
         self.password = password
         self.user = address
+
+        # for reading inbox
+        self.inbox = easyimap.connect(self.imap_server, self.user, self.password)
 
         # TODO check if is always needed
         self._login()
@@ -42,7 +49,13 @@ class EmailHandler:
             self.server.sendmail(self.user, to_addrs=toaddr, msg=formatted_message)
 
     def get_status(self):
-        pass
+        def update():
+            mail_ids = self.inbox.listids()
+            for id_ in mail_ids:
+                mail = self.inbox.mail(id_)
+
+                self.db.add_answer_to_message(message_id=id_, user_id=mail.from_addr, answer=mail.body)
+        threading.Thread(target=update).start()
 
     def _format_message(self, receiver, text, seen=False):
         message = MIMEMultipart("alternative")
