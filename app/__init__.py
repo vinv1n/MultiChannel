@@ -9,6 +9,7 @@ from flask_restful import Api, reqparse
 from queue import Queue
 from app.resources.users import Users, UserSingle
 from app.resources.messages import Messages, MessageSingle, MessageSeen
+from app.resources.updates import Update
 from app.resources.authentication import UserLogin, Logout, RefreshLogin, RefreshLogout
 
 # views for frontend stuff
@@ -27,7 +28,7 @@ def _channel(body, _type, group, user, channel_info, _name):
     """
     logger.warning('This is channel {}'.format(_name))
     logger.warning('body: {}'.format(body))
-    logger.warning('type: {}'.format(_type))  
+    logger.warning('type: {}'.format(_type))
     logger.warning('group_message: {}'.format(group))
     logger.warning('user: {}'.format(user))
     logger.warning('Channel information: {}'.format(channel_info))
@@ -39,7 +40,7 @@ channels = {
     'slack': partial(_channel, _name='slack'),"""
 }
 
-
+# for log file
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s:%(name)-s:%(levelname)s %(message)s",
                         datefmt="%a, %d %b %Y %H:%M:%S", filemode="w", filename="/tmp/multi.log")
 
@@ -71,18 +72,10 @@ def create_app(args):
     # Add webpage to app
     app = webpage(app)
 
-    # Blueprints could be used?
     api = Api(app)
     db_handler = database_handler()
     message_handler = Message_handler(channels=channels, _database_handler=db_handler)
-    app.config['JWT_SECRET_KEY'] = 'thisissecretfortesting123'
-    app.config['JWT_BLACKLIST_ENABLED'] = True
-    app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
-    app.config['JWT_TOKEN_LOCATION'] = ['cookies']
-    app.config['JWT_ACCESS_COOKIE_PATH'] = '/'   #This way this is usable in /api and /webui
-    app.config['JWT_REFRESH_COOKIE_PATH'] = '/api/re-login'  #this shouldn't be needed in webui
-    app.config['JWT_COOKIE_CSRF_PROTECT'] = False
-    app.config['JWT_COOKIE_SECURE'] = True   # Set this false for testing if true doesn't work
+
     jwt = JWTManager(app)
     blacklist = set()
 
@@ -101,7 +94,7 @@ def create_app(args):
     api.add_resource(
         RefreshLogin,
         "/api/re-login", #Maybe change this to something that might be more suitable? Patch request to login?
-        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+        resource_class_kwargs={'db_handler': db_handler, 'jwt':jwt},
     )
     api.add_resource(
         Logout,
@@ -137,6 +130,12 @@ def create_app(args):
         MessageSeen,
         "/api/messages/<string:message_id>/<string:seen_id>",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+    )
+    # enpoint to update messages to database
+    api.add_resource(
+        Update,
+        "/api/channels/update",
+        resource_class_kwargs={'db_handler': db_handler, "channels": channels},
     )
 
     logger.info("Init channels is done")
