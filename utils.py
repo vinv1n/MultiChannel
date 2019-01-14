@@ -3,6 +3,8 @@ import uuid
 import six
 import json
 
+from jsonschema import validate
+
 if six.PY2:
     import urllib
 else:
@@ -112,3 +114,17 @@ class Networking:
             return None, 400
 
         return response_json, 200
+
+
+def validate_json(input_schema, real_schema):
+    """
+    Validates given json against real json
+
+    TODO: wrapper would be useful
+    """
+    try:
+        validate(input_schema, real_schema)
+    except Exception as e:
+        logger.debug("Error during json validation %s", e)
+        return False
+    return True

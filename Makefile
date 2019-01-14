@@ -1,6 +1,6 @@
 .PHONY : build
 build :
-	docker-compose build --no-start;
+	docker-compose build;
 
 .PHONY : clean
 clean :
