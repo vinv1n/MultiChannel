@@ -5,8 +5,8 @@
 <table class="table table-bordered table-dark">
   <thead>
     <tr>
-      <th scope="col">ID</th>
       <th scope="col">Username</th>
+      <th scope="col">ID</th>
       <th scope="col">Preferred channel</th>
       <th scope="col">Admin</th>
     </tr>
@@ -14,8 +14,8 @@
   <tbody>
     {% for user in users %}
     <tr>
-      <td><a href="/webui/users/{{user.get('_id')}}">{{user.get('_id')}}</a></td>
-      <td>{{user.get('username')}}</td>
+      <td><a href="/webui/users/{{user.get('_id')}}">{{user.get('username')}}</a></td>
+      <td>{{user.get('_id')}}</td>
       <td>{{user.get('preferred_channel')}}</td>
       <td>{{user.get('admin')}}</td>
     </tr>

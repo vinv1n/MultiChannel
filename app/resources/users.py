@@ -146,9 +146,10 @@ class UserSingle(Resource):
 
     @jwt_required
     def patch(self, user_id):
-        user_schema={
+        user_patch_schema={
             'type': 'object',
                 'properties':{
+                    'admin':{ 'type': 'string', 'enum':['True', 'False'] },
                     'password':{ 'type': 'string', 'minLength': 4, 'maxLength': 32 },
                     'preferred_channel':{ 'type': 'string', 'enum': ['email','facebook','telegram','irc','slack'] },
                     'channels':{'type':'object', 'properties':{
@@ -176,16 +177,16 @@ class UserSingle(Resource):
                             'username':{'type': 'string'},
                             'channel':{'type': 'string'}},
                             'required': ['username','channel'],'additionalProperties': False}
-                    },'required': [],'additionalProperties': False}
+                    },'additionalProperties': False}
+              
                 },
-                'required': [],
                 'additionalProperties': False
         }
         try:
-            validate(request.json,user_schema)
+            validate(request.json,user_patch_schema)
         except Exception as e:
             error_msg = str(e).split("\n")
-            return {"msg": "error with input data:"+ str(error_msg[0])}
+            return {"msg": "error with input data:"+ str(error_msg[0])}, 400
 
         if self.check_authorization(user_id) is True:
             data = request.get_json()
@@ -198,9 +199,10 @@ class UserSingle(Resource):
                 elif key == "preferred_channel":
                     if data[key] not in ["email", "slack", "irc", "facebook", "telegram"]:
                         return {"Error": "Not modified. Channel unknown"}, 400
-                elif key == "password":
+                elif key == "password" and data["password"] != "":
                     user_data[str(key)] = pbkdf2_sha256.encrypt(saslprep(data["password"]), rounds=200000, salt_size=16)
-                user_data[str(key)] = data.get(key)
+                else:
+                    user_data[str(key)] = data.get(key)
             response = self.db_handler.update_user(user_data, user_id)
 
             if response == 200:

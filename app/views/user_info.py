@@ -16,14 +16,15 @@ def user_info(user_id):
     if request.method == 'POST':
         # HTML forms can only use methods POST and GET
         # Therefore, POST is used here in place of PATCH
-        patching_data = _parse_patching_data(request)
-
+       
+       
+       
         return _user_info_base(
             request = request,
             method='PATCH',
             user_id=user_id,
-            page=_user_patched,
-            json_data=patching_data,
+            page=_user_info_page,
+            json_data=_patch_html_parser(request.form),
         )
 
     # HTML forms/buttons/links cannot send DELETE requests,
@@ -50,17 +51,25 @@ def user_info(user_id):
 
 def _user_info_base(request, method, user_id, page, json_data=None):
     
-    response = requests.get('{}/users/{}'.format(URL, user_id), cookies=request.cookies)
-
-    if response.status_code != 200:
-        abort(response.status_code)
+    if method == 'GET':
+        response = requests.get('{}/users/{}'.format(URL, user_id), cookies=request.cookies)
+        if response.status_code != 200:
+            abort(response.status_code)
+    if method == 'PATCH':
+        response_patch = requests.patch('{}/users/{}'.format(URL, user_id), json=json_data, cookies=request.cookies)
+        if response_patch.status_code != 200:
+            return render_template(
+                'response.html',
+                msg=response_patch.status_code
+                )
+        response = requests.get('{}/users/{}'.format(URL, user_id), cookies=request.cookies)
+    
 
     return page(response)
 
 
 def _user_info_page(response):
     json_data = response.json()
-    logger.warning(json_data)
 
     _user_data = json_data.get('User', {})
 
@@ -103,11 +112,35 @@ def _parse_patching_data(response):
     json_data = response.json()
 
 
-def _user_patched(response):
-    pass
-
 def _user_not_found():
     return render_template(
         'response.html',
         msg='Could not find user.',
     )
+
+def _patch_html_parser(form):
+    form_dict = form.to_dict(flat=False)
+    user_data = {
+    }
+
+    """if form_dict['preferred_channel'][0] != "":
+        user_data["preferred_channel"] = form_dict['preferred_channel'][0]
+    if form_dict['password'][0] != "" and form_dict['con_pass'][0] == form_dict['password'][0]:
+        user_data["password"] = form_dict['password'][0]
+    if form_dict['admin'][0] == "True":
+        user_data["admin"] = form_dict['admin'][0]"""
+
+    for key in form_dict:
+        if form_dict[key][0] != "":
+            user_data[key] = form_dict[key][0]
+        else:
+            pass
+
+    logger.warning(user_data)
+    
+    
+  
+
+    
+
+    return user_data
