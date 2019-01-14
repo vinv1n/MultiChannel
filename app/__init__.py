@@ -9,6 +9,7 @@ from flask_restful import Api, reqparse
 from queue import Queue
 from app.resources.users import Users, UserSingle
 from app.resources.messages import Messages, MessageSingle, MessageSeen
+from app.resources.updates import Update
 from app.resources.authentication import UserLogin, Logout, RefreshLogin, RefreshLogout
 
 # views for frontend stuff
@@ -39,7 +40,7 @@ channels = {
     'slack': partial(_channel, _name='slack'),"""
 }
 
-
+# for log file
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s:%(name)-s:%(levelname)s %(message)s",
                         datefmt="%a, %d %b %Y %H:%M:%S", filemode="w", filename="/tmp/multi.log")
 
@@ -129,6 +130,12 @@ def create_app(args):
         MessageSeen,
         "/api/messages/<string:message_id>/<string:seen_id>",
         resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+    )
+    # enpoint to update messages to database
+    api.add_resource(
+        Update,
+        "/api/channels/update",
+        resource_class_kwargs={'db_handler': db_handler, "channels": channels},
     )
 
     logger.info("Init channels is done")
