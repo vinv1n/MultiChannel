@@ -7,10 +7,11 @@ from passlib.utils import saslprep
 
 class UserLogin(Resource):
 
-    def __init__(self, db_handler, jwt):
+    def __init__(self, db_handler, jwt, schema):
         self.db_handler = db_handler
         self.jwt = jwt
-    
+        self.schema = schema
+
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument("username",location="json",required=True)

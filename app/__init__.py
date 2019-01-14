@@ -99,17 +99,10 @@ def create_app(args):
         jti = token['jti']
         return jti in blacklist
 
-    # Resources
     api.add_resource(
-<<<<<<< HEAD
-        Login,
-        "/api/login",
-        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, "schema": schema},
-=======
         UserLogin,
         "/api/user-login",
-        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
->>>>>>> master
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, "schema": schema},
     )
     api.add_resource(
         RefreshLogin,
