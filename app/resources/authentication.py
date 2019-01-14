@@ -6,6 +6,7 @@ from passlib.hash import pbkdf2_sha256
 from passlib.utils import saslprep
 from jsonschema import validate
 
+
 class UserLogin(Resource):
 
     def __init__(self, db_handler, jwt):
@@ -19,8 +20,8 @@ class UserLogin(Resource):
         login_schema={
             'type': 'object',
                 'properties':{
-                    'username':{ 'type': 'string', 'minLength': 4, 'maxLength': 20 },
-                    'password':{ 'type': 'string', 'minLength': 4, 'maxLength': 32 }
+                    'username':{ 'type': 'string'},
+                    'password':{ 'type': 'string'}
                 },
                 'required': [ 'username', 'password' ],
                 'additionalProperties': False
@@ -29,7 +30,7 @@ class UserLogin(Resource):
             validate(request.json,login_schema)
         except Exception as e:
             error_msg = str(e).split("\n")
-            return {"msg": "error with input data:"+ str(error_msg[0])}
+            return {"msg": "error with input data:"+ str(error_msg[0])}, 400
 
         parser = reqparse.RequestParser()
         parser.add_argument("username",location="json")
@@ -38,21 +39,21 @@ class UserLogin(Resource):
 
 
         user = self.db_handler.get_user_name(args['username'])
-        if not user:
-            return {"msg": "No user: "+args["username"]},404
+        if user is None:
+            return {"msg": "Authentication error"}, 401
         else:
             if pbkdf2_sha256.verify(saslprep(args["password"]), user["password"]):
                 try:
-                    access_token = create_access_token(identity = { "username" : user["username"], "admin" : user["admin"] })
-                    refresh_token = create_refresh_token(identity = { "username" : user["username"], "admin" : user["admin"] })
+                    access_token = create_access_token(identity = { "username" : user["username"], "admin" : user["admin"], "_id": user["_id"]})
+                    refresh_token = create_refresh_token(identity = { "username" : user["username"], "admin" : user["admin"], "_id": user["_id"]})
                     resp = jsonify({'msg': 'logged in'})
                     set_access_cookies(resp, access_token)
                     set_refresh_cookies(resp, refresh_token)
                     return resp
                 except Exception as e:
-                    return {"msg": "Error creating tokens"+str(e)}
+                    return {"msg": "Authentication error"}, 401
             else:
-                return {"msg": "Authentication error"}
+                return {"msg": "Authentication error"}, 401
 
 
 class Logout(Resource):
