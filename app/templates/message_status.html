@@ -9,7 +9,7 @@
       <td>{{message.get('_id')}}</td></tr>
     <tr><td width="10%">
 	<label for="fname">Date</label></td>
-      <td>INSERT DATE</td></tr>
+      <td>{{message.get('timestamp')}}</td></tr>
     <tr><td width="10%">
 	<label for="fname">Type</label></td>
       <td>{{message.get('type')}}</td></tr>
@@ -22,7 +22,7 @@
   </table>
 
 <h2>Message Body</h2>
-<p>{{message.get('body')}}</p>
+<p>{{message.get('message')}}</p>
 
 {% if show_answers %}
   <h2>Answers</h2>
@@ -30,6 +30,7 @@
   <thead>
     <tr>
       <th scope="col">Name</th>
+      <th scope="col">Sent</th>
       <th scope="col">Seen</th>
       <th scope="col">Answer</th>
     </tr>
@@ -37,7 +38,8 @@
   <tbody>
     {%for receiver in receivers%}
     <tr>
-      <th scope="row">{{receivers[receiver].get('username')}}</th>
+      <th scope="row">{{receiver}}</th>
+      <td>{{receivers[receiver].get('sent')}}</td>
       <td>{{receivers[receiver].get('seen')}}</td>
       <td>{{receivers[receiver].get('answer')}}</td>
     </tr>

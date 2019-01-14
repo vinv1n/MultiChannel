@@ -3,7 +3,7 @@ from flask_restful import Resource, reqparse
 from passlib.hash import pbkdf2_sha256
 from passlib.utils import saslprep
 from flask_jwt_extended import jwt_required, get_jwt_identity
-
+from jsonschema import validate
 
 """"
 Users resource class. This class should handle everything
@@ -33,34 +33,77 @@ class Users(Resource):
 
     @jwt_required
     def get(self):
-        response = self.db_handler.get_users(self.check_authorization())
+        authorized = self.check_authorization()
+        if not authorized:
+            return {"msg": "Action not authorized."}, 401
+        response = self.db_handler.get_users()
         if response is None:
-            return {"Error": "Error during data handling"}, 400
+            return {"msg": "Error during data handling"}, 400
         else:
-            return {"Users": response}, 200
+            return {"users": response}, 200
 
     def post(self):
         """ Post a new user to the database. Make a dictionary to pass to the db_handler."""
 
-        user_data = {}
+        user_schema={
+            'type': 'object',
+                'properties':{
+                    'username':{ 'type': 'string', 'minLength': 4, 'maxLength': 20 },
+                    'password':{ 'type': 'string', 'minLength': 4, 'maxLength': 32 },
+                    'preferred_channel':{ 'type': 'string', 'enum': ['email','facebook','telegram','irc','slack'] },
+                    'channels':{'type':'object', 'properties':{
+                        
+                        'email': {'type':'object','properties':{
+                            'address': {'type': 'string'}},
+                            'required': ['address'],'additionalProperties': False},
+                        
+                        
+                        'facebook': {'type':'object','properties':{
+                            'user_id': {'type': 'string'}},
+                            'required': ['user_id'],'additionalProperties': False},
+
+
+                        'telegram': {'type':'object','properties':{
+                            'user_id':{'type': 'string'}},
+                            'required': ['user_id'],'additionalProperties': False},
+
+                        'irc': {'type':'object','properties':{
+                            'nickname':{'type': 'string'},
+                            'network':{'type': 'string'}},
+                            'required': ['nickname','network'],'additionalProperties': False},
+
+                        'slack': {'type':'object','properties':{
+                            'username':{'type': 'string'},
+                            'channel':{'type': 'string'}},
+                            'required': ['username','channel'],'additionalProperties': False}
+                    },'required': ['email','facebook','telegram','irc','slack'],'additionalProperties': False}
+                },
+                'required': [ 'username', 'password', 'preferred_channel', 'channels' ],
+                'additionalProperties': False
+        }
+
         try:
-            data = request.get_json()
-            user_data["username"] = data.get("username")
-            user_data["password"] = pbkdf2_sha256.encrypt(saslprep(data.get("password")), rounds=200000, salt_size=16)
-            user_data["preferred_channel"] = data.get("preferred_channel")
-            user_data["channels"] = data.get("channels")
-            user_data["admin"] = False
+            validate(request.json,user_schema)
         except Exception as e:
-            return {'Error': "Malformed request / Error parsing data"}, 400
+            error_msg = str(e).split("\n")
+            return {"msg": "error with input data:"+ str(error_msg[0])}, 400
+
+        user_data = {}
+        data = request.get_json()
+        user_data["username"] = data.get("username")
+        user_data["password"] = pbkdf2_sha256.encrypt(saslprep(data.get("password")), rounds=200000, salt_size=16)
+        user_data["preferred_channel"] = data.get("preferred_channel")
+        user_data["channels"] = data.get("channels")
+        user_data["admin"] = False
 
         response = self.db_handler.create_user(user_data)
 
         if response == "used":
-            return {'Error': "Username already in use"}, 400
+            return {'msg': "Username already in use"}, 400
         elif response is None:
-            return {"Error": "Error during data handling"}
+            return {"msg": "Error during data handling"}
         else:
-            return {"Message": "User created", "user_id": response}, 200
+            return {"msg": "User created", "user_id": response}, 200
 
 
 class UserSingle(Resource):
@@ -98,14 +141,55 @@ class UserSingle(Resource):
         if self.check_authorization(user_id) is True:
             response = self.db_handler.get_user(user_id)
             if response is None:
-                return {"Error": "Error during data handling"}, 400
+                return {"msg": "Error during data handling"}, 400
             else:
                 return {"User": response}, 200
         else:
-            return{"Error": "Unauthorized"}, 401
+            return{"msg": "Unauthorized"}, 401
 
     @jwt_required
     def patch(self, user_id):
+        user_schema={
+            'type': 'object',
+                'properties':{
+                    'password':{ 'type': 'string', 'minLength': 4, 'maxLength': 32 },
+                    'preferred_channel':{ 'type': 'string', 'enum': ['email','facebook','telegram','irc','slack'] },
+                    'channels':{'type':'object', 'properties':{
+                        
+                        'email': {'type':'object','properties':{
+                            'address': {'type': 'string'}},
+                            'required': ['address'],'additionalProperties': False},
+                        
+                        
+                        'facebook': {'type':'object','properties':{
+                            'user_id': {'type': 'string'}},
+                            'required': ['user_id'],'additionalProperties': False},
+
+
+                        'telegram': {'type':'object','properties':{
+                            'user_id':{'type': 'string'}},
+                            'required': ['user_id'],'additionalProperties': False},
+
+                        'irc': {'type':'object','properties':{
+                            'nickname':{'type': 'string'},
+                            'network':{'type': 'string'}},
+                            'required': ['nickname','network'],'additionalProperties': False},
+
+                        'slack': {'type':'object','properties':{
+                            'username':{'type': 'string'},
+                            'channel':{'type': 'string'}},
+                            'required': ['username','channel'],'additionalProperties': False}
+                    },'required': [],'additionalProperties': False}
+                },
+                'required': [],
+                'additionalProperties': False
+        }
+        try:
+            validate(request.json,user_schema)
+        except Exception as e:
+            error_msg = str(e).split("\n")
+            return {"msg": "error with input data:"+ str(error_msg[0])}
+
         if self.check_authorization(user_id) is True:
             data = request.get_json()
             user_data = {}
@@ -123,20 +207,20 @@ class UserSingle(Resource):
             response = self.db_handler.update_user(user_data, user_id)
 
             if response == 200:
-                return {"Message": "modified"}, response
+                return {"msg": "modified"}, response
             else:
-                return {"Error": "Not modified"}, response
+                return {"msg": "Not modified"}, response
         else:
-            return{"Error": "Unauthorized"}, 401
+            return{"msg": "Unauthorized"}, 401
 
     @jwt_required
     def delete(self, user_id):
         if self.check_authorization(user_id) is True:
             response = self.db_handler.delete_user(user_id)
             if response is None:
-                return {"Error": "Error during data handling"}, 400
+                return {"msg": "Error during data handling"}, 400
             elif response is True:
-                return {"Message": "User deleted"}
-            return {"Message": response}
+                return {"msg": "User deleted"}
+            return {"msg": response}
         else:
-            return{"Error": "Unauthorized"}, 401
+            return{"msg": "Unauthorized"}, 401

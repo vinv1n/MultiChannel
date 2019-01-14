@@ -4,7 +4,7 @@ import six
 import json
 import functools
 
-from flask import render_template
+from flask import render_template, request, abort
 from jsonschema import validate, ValidationError
 
 if six.PY2:
@@ -121,14 +121,13 @@ def json_validator(*validator):
     def decorator_json_validator(func):
         @functools.wraps(func)
         def wrapper_json_validator(*args, **kwargs):
-            result_json = {}
+            result_json = request.get_json()
+            logger.critical(result_json)
             try:
-                validate(validator, result_json)
+                validate(validator[0], result_json)
             except (ValidationError, AttributeError) as e:
-                return render_template("validation_error.html"), e
-
+               return render_template("validation_error.html"), e
             return func(*args, **kwargs)
-
         return wrapper_json_validator
 
     return decorator_json_validator

@@ -1,6 +1,8 @@
+import datetime
 from flask import request
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from jsonschema import validate
 
 class Messages(Resource):
     """
@@ -33,38 +35,57 @@ class Messages(Resource):
             try:
                 response = self.db_handler.get_messages()
                 if response == None:
-                    return {"Error": "Error during data handling"}, 400
+                    return {"msg": "Error during data handling"}, 400
                 else:
-                    return {'Messages': response}, 200
+                    return {'messages': response}, 200
             except Exception as e:
-                return {"Error": "Error during data handling"}, 400
+                return {"msg": "Error during data handling"}, 400
         else:
-            return {"Error" : "Unauthorized"}, 401
+            return {"msg" : "Unauthorized"}, 401
 
     @jwt_required
     def post(self):
         """
         Send a new message.
         """
+
+        message_schema={
+            'type': 'object',
+                'properties':{
+                    'message':{ 'type': 'string', 'minLength': 2, 'maxLength': 500 },
+                    'sender':{ 'type': 'string', 'minLength': 4, 'maxLength': 20 },
+                    'users':{ 'type': 'array', 'contains':{'type':'string'} },
+                    'type':{ 'type': 'string', 'enum':['fnf','answerable', 'traced'] },
+                    'group_message':{ 'type': 'string', 'enum':['True', 'False'] }
+
+                },
+                'required': [ 'message', 'users', 'sender', 'type', 'group_message' ],
+                'additionalProperties': False
+    }
+        try:
+            validate(request.json,message_schema)
+        except Exception as e:
+            error_msg = str(e).split("\n")
+            return {"msg": "error with input data:"+ str(error_msg[0])}, 400
+
         if self.check_authorization() == True:
-            try:
-                args = {}
-                data = request.get_json()
-                args['message'] = data['message']
-                args['sent_to'] = data['sent_to']
-            except Exception as e:
-                return {'Error' : "Malformed request. Include 'message' and 'sent_to' as a list of users"}, 400
-            message_id = self.message_handler.send_message(
-                message = args["message"],
-                    #sender = get_jwt_identity(),
-                users = args["sent_to"]
-            )
+            
+            args = {}
+            data = request.get_json()
+            args['message'] = data['message']
+            args['sender'] = data['sender']
+            args['users'] = data['users']
+            args['type'] = data['type']
+            args['group_message'] = data['group_message']
+            args['timestamp'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            message_id, msg = self.message_handler.send_message(args)
             if message_id != None:
-                return {'message_id': message_id}
+                return {'message_id': message_id, 'msg' : msg}
             else:
-                return {'Error': 'Could not post the message'}, 400
+                return {'msg': 'Error. Could not post the message'}, 400
         else:
-            return {"Error" : "Unauthorized"}, 401
+            return {'msg' : "Unauthorized"}, 401
 
 
 class MessageSingle(Resource):
@@ -95,11 +116,11 @@ class MessageSingle(Resource):
         if self.check_authorization() == True:
             message = self.db_handler.get_message(message_id)
             if message != {} or message != None:
-                return {'Message': message}, 200
+                return {'message': message}, 200
             else:
-                return {"Message": "No messages with id:"+message_id}, 404
+                return {"msg": "No messages with id:"+message_id}, 404
         else:
-            return {"Error" : "Unauthorized"}, 401
+            return {"msg" : "Unauthorized"}, 401
 
     @jwt_required
     def delete(self, message_id):
@@ -109,11 +130,11 @@ class MessageSingle(Resource):
         if check_authorization() == True:
             response = self.db_handler.delete_message(message_id)
             if resposnse == None:
-                return {"Error": "Error during data handling"}
+                return {"msg": "Error during data handling"}
             else:
-                return {"Message": response}
+                return {"msg": response}
         else:
-            return {"Error" : "Unauthorized"}, 401
+            return {"msg" : "Unauthorized"}, 401
 
 class MessageSeen(Resource):
     """

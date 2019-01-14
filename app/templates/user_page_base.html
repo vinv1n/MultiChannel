@@ -42,9 +42,7 @@ div {
     <table>
 
       <tr>
-	<td>
-	  <label for="fname">Name</label>
-	</td>
+	
 	{% block name %}{% endblock %}
       </tr>
 
@@ -71,19 +69,24 @@ div {
 	</td>
       </tr>
 
-      <td> <label for="fname"></br>IRC-Nick</label></td>
+      <td> <label for="fname"></br>IRC-nick</label></td>
       <td><input type="text" id="fname" name="irc_nick" placeholder="", value={{irc_nick}}><input type="radio" name="preferred_channel" value="irc"><br></td></tr>
 
-<td> <label for="fname"></br>IRC-Network</label></td>
-<td> <input type="text" id="fname" name="irc_network" placeholder="", value={{irc_network}}><input type="radio" name="preferred_channel" value="irc_chn"><br></td></tr>
+<td> <label for="fname"></br>IRC-network</label></td>
+<td> <input type="text" id="fname" name="irc_network" placeholder="", value={{irc_network}}><br></td></tr>
 
-<td> <label for="fname"></br>Slack Username</label></td>
+<td> <label for="fname"></br>Slack username</label></td>
 <td> <input type="text" id="fname" name="slack_user" placeholder="", value={{slack_username}}><input type="radio" name="preferred_channel" value="slack"><br></td></tr>
+
+<td> <label for="fname"></br>Slack channel</label></td>
+<td> <input type="text" id="fname" name="slack_channel" placeholder="", value={{slack_channel}}><br></td></tr>
 	
 <td>  <label for="fname"></br>Telegram username</label></td>
-<td > <input type="text" id="fname" name="telegram" placeholder="", value={{telegram_username}}><input type="radio" name="preferred_channel" value="telegram"><br>
+<td > <input type="text" id="fname" name="telegram" placeholder="", value={{telegram_username}}><input type="radio" name="preferred_channel" value="telegram"><br></td></tr>
 
-</td></tr>
+<td> <label for="fname"></br>Facebook username</label></td>
+<td> <input type="text" id="fname" name="facebook" placeholder="", value={{facebook_username}}><input type="radio" name="preferred_channel" value="facebook"><br></t></tr>
+
 </table>
 
 {% block submit %}{% endblock %}

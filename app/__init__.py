@@ -127,7 +127,7 @@ def create_app(args):
     api.add_resource(
         UserSingle,
         "/api/users/<string:user_id>",
-        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt}
     )
     api.add_resource(
         Messages,
