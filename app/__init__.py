@@ -102,7 +102,7 @@ def create_app(args):
     api.add_resource(
         UserLogin,
         "/api/user-login",
-        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, "schema": schema, "app": app},
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt}
     )
     api.add_resource(
         RefreshLogin,
@@ -122,7 +122,7 @@ def create_app(args):
     api.add_resource(
         Users,
         "/api/users",
-        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt, "schema": schema},
+        resource_class_kwargs={'db_handler': db_handler,'jwt':jwt},
     )
     api.add_resource(
         UserSingle,

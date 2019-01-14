@@ -2,8 +2,10 @@ import logging
 import uuid
 import six
 import json
+import functools
 
-from jsonschema import validate
+from flask import render_template
+from jsonschema import validate, ValidationError
 
 if six.PY2:
     import urllib
@@ -115,16 +117,21 @@ class Networking:
 
         return response_json, 200
 
+def json_validator(*validator):
+    def decorator_json_validator(func):
+        @functools.wraps(func)
+        def wrapper_json_validator(*args, **kwargs):
+            result_json = {}
+            try:
+                validate(validator, result_json)
+            except (ValidationError, AttributeError) as e:
+                return render_template("validation_error.html"), e
 
-def validate_json(input_schema, real_schema):
-    """
-    Validates given json against real json
+            return func(*args, **kwargs)
 
-    TODO: wrapper would be useful
-    """
-    try:
-        validate(input_schema, real_schema)
-    except Exception as e:
-        logger.debug("Error during json validation %s", e)
-        return False
-    return True
+        return wrapper_json_validator
+
+    return decorator_json_validator
+
+def encode_string(string):
+    return string.decode("utf-8")

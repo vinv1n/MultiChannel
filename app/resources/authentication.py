@@ -1,23 +1,20 @@
 from flask import request
 from flask_restful import Resource, reqparse
-from app.json_validation_schemas import get_login_validation_schema
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity, get_raw_jwt
 from passlib.hash import pbkdf2_sha256
 from passlib.utils import saslprep
-from utils import validate_json
-from app.json_validation_schemas import get_login_validation_schema
+from utils import json_validator
+from app.json_validation_schemas import LOGIN_SCHEMA
 
 
 class UserLogin(Resource):
 
-    def __init__(self, db_handler, jwt, schema, app):
+    def __init__(self, db_handler, jwt):
         self.db_handler = db_handler
         self.jwt = jwt
 
+    @json_validator(LOGIN_SCHEMA)
     def post(self):
-
-        if not validate_json(input_schema=request.json, real_schema=get_login_validation_schema()):
-            return "", 400
 
         parser = reqparse.RequestParser()
         parser.add_argument("username",location="json",required=True)
