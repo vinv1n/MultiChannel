@@ -179,16 +179,15 @@ class UserSingle(Resource):
                             'username':{'type': 'string'},
                             'channel':{'type': 'string'}},
                             'required': ['username','channel'],'additionalProperties': False}
-                    },'required': [],'additionalProperties': False}
+                    },'additionalProperties': False}
                 },
-                'required': [],
                 'additionalProperties': False
         }
         try:
             validate(request.json,user_schema)
         except Exception as e:
             error_msg = str(e).split("\n")
-            return {"msg": "error with input data:"+ str(error_msg[0])}
+            return {"msg": "error with input data:"+ str(error_msg[0])}, 400
 
         if self.check_authorization(user_id) is True:
             data = request.get_json()
