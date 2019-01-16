@@ -89,6 +89,12 @@ div {
 
 </table>
 
+{% with messages = get_flashed_messages() %}
+ {% if messages %}
+   <h3> {{messages[0]}} </h3>
+  {% endif %}
+{% endwith %}
+
 {% block submit %}{% endblock %}
 </form>
 </div>
