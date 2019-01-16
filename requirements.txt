@@ -18,3 +18,4 @@ passlib==1.7.1
 flask-jwt-extended==3.13.1
 Flask-json-schema==0.0.5
 jsonschema==2.6.0
+easyimap==0.6.3

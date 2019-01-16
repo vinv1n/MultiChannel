@@ -63,13 +63,11 @@ class Message_handler:
                 preferred_channel = information['preferred_channel']
                 if preferred_channel is None:
                     error_list.append(user_id)
-                    logger.warning("No preferred channel set. Skipping user: %s " %(str(user_id)))
+                    log.warning("No preferred channel set. Skipping user: %s " %(str(user_id)))
                     pass
             except Exception as e:
                 error_list.append(user_id)
                 pass
-            
-            
 
             _information = information['channels']
             channel_information = _information.get(preferred_channel)
@@ -77,7 +75,7 @@ class Message_handler:
             if channel_information is None:
                 #Add to id to error_list and skip
                 error_list.append(user_id)
-                logger.warning("No channel info set. Skipping user: %s " %(str(user_id)))
+                log.warning("No channel info set. Skipping user: %s " %(str(user_id)))
                 pass
 
             try:
@@ -94,7 +92,7 @@ class Message_handler:
                 error_list.append(user_id)
             if success:
                 self._set_message_sent_for_user(user=user_id)
-        
+
         if len(error_list) == 0:
             msg = "Successfully sent to all recipients"
         else:

@@ -32,7 +32,7 @@ services:
       - 27018:27017
     networks:
       - backend
-    command: mongod --ipv6 --noauth
+    command: mongod --ipv6 --noauth  # TODO add database authentication scripts
 
 networks:
   backend:
