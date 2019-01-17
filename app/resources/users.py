@@ -219,7 +219,7 @@ class UserSingle(Resource):
             if response is None:
                 return {"msg": "Error during data handling"}, 400
             elif response is True:
-                return {"msg": "User deleted"}
-            return {"msg": response}
+                return {"msg" : "User deleted"}
+            return {"msg": response}, 200
         else:
             return{"msg": "Unauthorized"}, 401
