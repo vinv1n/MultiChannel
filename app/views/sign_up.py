@@ -1,6 +1,6 @@
 import logging
 import requests
-from flask import render_template, request
+from flask import render_template, request, flash, redirect
 from app.views.utils import URL
 
 logger = logging.getLogger(__name__)
@@ -22,14 +22,14 @@ def _sign_up_post(request):
     response = requests.post('{}/users'.format(URL), json=msg)
 
     if response.status_code == 200:
-        msg = 'New user created!'
+        flash('New user created, you can now log in.')
+        return redirect('/webui/login')
     else:
         msg = 'Error while creating user: {}'.format(response.json().get('msg'))
-
-    return render_template(
-        'response.html',
-        msg=msg,
-    )
+        return render_template(
+            'response.html',
+            msg=msg,
+        )
 
 
 def _sign_up_html_parser(form):

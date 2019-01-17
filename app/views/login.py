@@ -1,6 +1,6 @@
 import logging
 import requests
-from flask import render_template, request, make_response, redirect
+from flask import render_template, request, redirect, flash
 from flask_jwt_extended import decode_token
 from app.views.utils import URL
 
@@ -23,7 +23,8 @@ def _login_post(request):
     response = requests.post('{}/user-login'.format(URL), json=data)
 
     if response.status_code != 200:
-        return render_template('response.html', msg=response.json().get('msg'))
+        flash(response.json().get('msg'))
+        return render_template('login.html')
 
     access_token = response.cookies.get('access_token_cookie')
     refresh_token = response.cookies.get('refresh_token_cookie')
@@ -31,7 +32,6 @@ def _login_post(request):
     admin = decoded_token.get('identity', {}).get('admin')
 
     if admin:
-        resp = make_response(render_template('home.html'))
         location = 'home'
     else:
         user_id = decoded_token.get('identity', {}).get('_id')
