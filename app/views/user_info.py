@@ -91,10 +91,8 @@ def _user_info_page(response, user_id):
 
 
 def _user_deleted(response, user_id):
-    return render_template(
-        'response.html',
-        msg='user deleted!',
-    )
+    flash('user deleted!')
+    return redirect('/webui/login')
 
 
 def _parse_patching_data(patching_data):
