@@ -41,15 +41,24 @@ def _message_status(request, message_id):
             msg='Failure: {}'.format(response.status_code),
         )
 
-    return _format_message_status_template(response.json()['message'])
+    user_response = requests.get(
+        '{}/users'.format(URL),
+        cookies=request.cookies
+    )
+    users = user_response.json()
+    usernames = {user.get('_id'): user.get('username') for user in users.get('users',  [])}
+
+    return _format_message_status_template(response.json()['message'], usernames)
 
 
-def _format_message_status_template(message):
+def _format_message_status_template(message, usernames):
     receivers = message.get('receivers')
     show_answers = True if message.get('type', 'fnf') != 'fnf' else False
+
     return render_template(
         'message_status.html',
         message=message,
         receivers=receivers,
         show_answers=show_answers,
+        usernames=usernames,
     )
