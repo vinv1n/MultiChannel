@@ -80,6 +80,12 @@
 						</button>
 					</div>
 
+{% with messages = get_flashed_messages() %}
+ {% if messages %}
+   <h3> {{messages[0]}} </h3>
+  {% endif %}
+{% endwith %}
+
 					<div class="text-center w-full p-t-25 p-b-230">
 						<a href="/webui/sign_up" class="txt1" style="color:black">
 							<b>Create new account...</b>

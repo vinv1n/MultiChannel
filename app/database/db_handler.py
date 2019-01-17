@@ -156,7 +156,7 @@ class database_handler:
             result = self.database.user_collection.delete_one(filter={'_id': ObjectId(user_id)}).acknowledged
             return result
         except Exception as e:
-            logger.critical("Error during data handling. Error: %s", e)
+            logger.critical("Error during data handling: %s", e)
             return None
 
     def get_messages(self):

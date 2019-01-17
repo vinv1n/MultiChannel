@@ -200,9 +200,10 @@ class UserSingle(Resource):
                 elif key == "preferred_channel":
                     if data[key] not in ["email", "slack", "irc", "facebook", "telegram"]:
                         return {"Error": "Not modified. Channel unknown"}, 400
-                elif key == "password":
+                if key == "password":
                     user_data[str(key)] = pbkdf2_sha256.encrypt(saslprep(data["password"]), rounds=200000, salt_size=16)
-                user_data[str(key)] = data.get(key)
+                else:
+                    user_data[str(key)] = data.get(key)
             response = self.db_handler.update_user(user_data, user_id)
 
             if response == 200:
@@ -219,7 +220,7 @@ class UserSingle(Resource):
             if response is None:
                 return {"msg": "Error during data handling"}, 400
             elif response is True:
-                return {"msg": "User deleted"}
-            return {"msg": response}
+                return {"msg" : "User deleted"}
+            return {"msg": response}, 200
         else:
             return{"msg": "Unauthorized"}, 401

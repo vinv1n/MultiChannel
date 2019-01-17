@@ -127,12 +127,12 @@ class MessageSingle(Resource):
         """
         Delete a message with the given ID.
         """
-        if check_authorization() == True:
+        if self.check_authorization() == True:
             response = self.db_handler.delete_message(message_id)
-            if resposnse == None:
+            if response == None:
                 return {"msg": "Error during data handling"}
             else:
-                return {"msg": response}
+                return {"msg": response}, 200
         else:
             return {"msg" : "Unauthorized"}, 401
 
