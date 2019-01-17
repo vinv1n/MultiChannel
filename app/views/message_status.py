@@ -1,6 +1,5 @@
 import logging
 import requests
-import json
 
 from flask import render_template, request
 from app.views.utils import URL
@@ -9,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def message_status(message_id):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         return _message_status_delete(request, message_id)
     else:
         return _message_status(request, message_id)
@@ -20,10 +19,10 @@ def _message_status_delete(request, message_id):
     if response.status_code == 200:
         msg = 'Message deleted!'
     else:
-        msg = 'Failure: {}'.format(response.status_code)
+        msg = 'Failure when deleting message: {}'.format(response.status_code)
 
     return render_template(
-        'response.html',
+        'response_admin.html',
         msg=msg,
     )
 
