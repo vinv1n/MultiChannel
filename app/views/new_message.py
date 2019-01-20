@@ -28,7 +28,7 @@ def _new_message_post(request):
         'group_message': msg_data.get('group_message')
     }
     
-    response = requests.post('{}/messages'.format(URL), json=data, cookies=cookies)
+    response = requests.post('{}/messages'.format(URL), json=data, cookies=cookies, verify=False)
     
     if response.status_code == 200:
         return render_template(
@@ -44,7 +44,7 @@ def _new_message_post(request):
 
 
 def _get_users(cookies):
-    response = requests.get('{}/users'.format(URL), cookies=cookies)
+    response = requests.get('{}/users'.format(URL), cookies=cookies, verify=False)
     if response.status_code == 200:
         users = response.json().get('users', [])
         ids = [user.get('_id') for user in users]

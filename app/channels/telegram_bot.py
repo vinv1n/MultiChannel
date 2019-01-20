@@ -17,12 +17,16 @@ BOT_COMMANDS = {
     "get_member_count": "getChatMembersCount"
 }
 
-TELEGRAM_TOKEN = "734503972:AAH_fbUmJRypHS1ynVI9vLPcsyiFU6SgsME"
 
 class Telegram:
 
     def __init__(self, *args, **kwargs):
-        self.base_url = "https://api.telegram.org/bot{}/".format(TELEGRAM_TOKEN)
+
+        if not isinstance(args[0], str):
+            raise ValueError("Invalid token")
+
+        self.token = args[0]
+        self.base_url = "https://api.telegram.org/bot{}/".format(self.token)
 
         # database handler
         self.database = kwargs.get("database_handler")
@@ -30,15 +34,17 @@ class Telegram:
         # for requests
         self.http = urllib3.PoolManager()
 
-    def send_message(self, parameters):
+    def send_message(self, message):
         """
+        TODO make the bot accept private messages
+ 
         Send message to channels or users
         :param msg: message string
         :param parameters: parameters for query strings
         :return: status code and response body
         """
         response, status = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
-                                                parameters=parameters)
+                                                parameters={"text": message.body, "chat_id": message.receivers})
 
         return response, status
 

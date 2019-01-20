@@ -16,3 +16,7 @@ all :
 deamon :
 	docker-compose build;
 	docker-compose up --detach;
+
+.PHONY : up
+up :
+	docker-compose up;

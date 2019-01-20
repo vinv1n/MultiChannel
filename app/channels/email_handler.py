@@ -14,19 +14,18 @@ logger = logging.getLogger(__name__)
 
 class EmailHandler:
 
-    def __init__(self, password, address, imap_sever, database, host=None, port=587):
+    def __init__(self, password, address, imap_server, host=None, port=587):
 
         if host:
             self.server = smtplib.SMTP(host=host, port=port)
         else:
             self.server = smtplib.SMTP("smtp.gmail.com", port=587)
 
-        self.db = database
-        self.imap_server = imap_sever
+        self.imap_server = imap_server
         self.password = password
         self.user = address
 
-        self.inbox = EmailHandler._init_inbox(password, imap_sever, address)
+        self.inbox = EmailHandler._init_inbox(password, imap_server, address)
 
         # TODO check if is always needed
         self._login()
@@ -49,26 +48,19 @@ class EmailHandler:
     def _quit(self):
         self.server.quit()
 
-    def send_message(self, text, receivers, msg_type, sender_id):
-        for receiver in receivers:
+    def send_message(self, message):
+        for receiver in message.receivers:
             toaddr = receiver.get("address")
-            if msg_type == "seen":
-                formatted_message = self._format_message(toaddr, text, seen=True)
+            if message.message_type == "seen":
+                formatted_message = self._format_message(toaddr, message.body, seen=True)
             else:
-                formatted_message = self._format_message(toaddr, text)
+                formatted_message = self._format_message(toaddr, message.body)
 
             self.server.sendmail(self.user, to_addrs=toaddr, msg=formatted_message)
 
         return True
 
     def get_status(self, message_id):
-
-        def update_databse(*args):
-            for result in args[0]:
-                try:
-                    self.db.update_messages(result)
-                except Exception as e:
-                    logger.critical("Database could not be updated. Error: %s", e)
 
         results, data = self.inbox.uid("search", None, "UNSEEN")
         id_list  = data[0].split()
@@ -81,10 +73,9 @@ class EmailHandler:
             results.append(parsed_email)
 
         if not results:
-            return False
+            return None
 
-        threading.Thread(target=update_databse, args=results).start()
-        return True
+        return results
 
     @staticmethod
     def _parse_raw_email(raw_message, id_):

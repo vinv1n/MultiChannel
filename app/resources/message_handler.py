@@ -21,6 +21,7 @@ Channel function should return whether the sending was succesful or not.
 from app.database.db_handler import database_handler
 import json
 import logging
+from utils import Message
 
 log = logging.getLogger(__name__)
 
@@ -134,7 +135,9 @@ class Message_handler:
         body = message.get('body')
         group_message = message.get('group_message')
 
-        success = channel(body, message_type, group_message, user, channel_information)
+        message = Message(body, message_type, group_message, user, channel_information)
+        # channel is a instance of class
+        success = channel.send_message(message)
         return success
 
     def _set_message_sent_for_user(self, user):

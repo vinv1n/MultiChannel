@@ -19,7 +19,7 @@ def _sign_up_post(request):
     msg = _sign_up_html_parser(request.form)
     logger.warning('sign_up msg: {}'.format(msg))
 
-    response = requests.post('{}/users'.format(URL), json=msg)
+    response = requests.post('{}/users'.format(URL), json=msg, verify=False)
 
     if response.status_code == 200:
         msg = 'New user created!'

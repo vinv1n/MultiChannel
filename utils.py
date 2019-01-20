@@ -15,11 +15,11 @@ else:
 logger = logging.getLogger(__name__)
 
 
-class MultiChannelExeption(Exception):
+class MultiChannelException(Exception):
     """
     Custom exeption class for MultiChannel app
     """
-    def __init__(self, message, error):
+    def __init__(self, message):
         super().__init__(message)
 
 

@@ -16,7 +16,7 @@ def message_status(message_id):
 
 
 def _message_status_delete(request, message_id):
-    response = requests.delete('{}/messages/{}'.format(URL, message_id), cookies=request.cookies)
+    response = requests.delete('{}/messages/{}'.format(URL, message_id), cookies=request.cookies, verify=False)
     if response.status_code == 200:
         msg = 'Message deleted!'
     else:
@@ -29,7 +29,7 @@ def _message_status_delete(request, message_id):
 
 
 def _message_status(request, message_id):
-    response = requests.get('{}/messages/{}'.format(URL, message_id), cookies=request.cookies)
+    response = requests.get('{}/messages/{}'.format(URL, message_id), cookies=request.cookies, verify=False)
 
     if response.status_code == 404:
         return render_template(
