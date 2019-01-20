@@ -48,10 +48,11 @@ def _init_channels():
     def load_config():
         conf = None
         try:
-            with open("./config.json", "r") as config:
+            with open(os.path.join(os.getcwd(), "config.json"), "r") as config:
                 conf = json.loads(config.read())
         except (IOError, OSError, KeyError):
             return None
+
         if not conf:
             return {}
 
@@ -75,7 +76,6 @@ def _init_channels():
         "email": EmailHandler(password=email.get("password"), address=email.get("address"),
                                 imap_server=email.get("imap"), host=email.get("smtp"))
     }
-    
     return _channels
 
 # for log file
