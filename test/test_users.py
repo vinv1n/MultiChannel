@@ -4,34 +4,52 @@ import requests
 import argparse
 import logging
 import json
+import random, string
 
+URL = 'http://127.0.0.1:5000/api'
+
+
+
+def randomname(length):
+   chars = string.ascii_lowercase
+   return ''.join(random.choice(chars) for i in range(length))
 
 class get_users_test(unittest.TestCase):
 
     def setUp(self):
         headers = {"Content-type": "application/json"}
         data = {"username": "admin", "password": "admin"}
-        login_response = requests.post("http://0.0.0.0:5000/api/user-login", headers=headers, data=json.dumps(data))
+        login_response = requests.post(URL+"/user-login", headers=headers, data=json.dumps(data))
 
         self.auth_cookies={"access_token_cookie":login_response.cookies.get("access_token_cookie"),
         "refresh_token_cookie":login_response.cookies.get("refresh_token_cookie")}
       
     def test_get_users(self):
-        response = requests.get("http://0.0.0.0:5000/api/users", cookies=self.auth_cookies)
+        response = requests.get(URL+"/users", cookies=self.auth_cookies)
 
         self.assertEqual(response.status_code, 200)
 
     def test_get_users_fail_no_auth(self):
-        response = requests.get("http://0.0.0.0:5000/api/users")
+        response = requests.get(URL+"/users")
 
         self.assertEqual(response.status_code, 401)
 
 class create_users_test(unittest.TestCase):
+
+    def setUp(self):
+        headers = {'Content-type': 'application/json'}
+        data = {"username": "admin", "password": "admin"}
+        login_response = requests.post(URL+'/user-login', headers=headers, data=json.dumps(data))
+
+        self.auth_cookies={'access_token_cookie':login_response.cookies.get('access_token_cookie'),
+         'refresh_token_cookie':login_response.cookies.get('refresh_token_cookie')}
     
     def test_create_user(self):
         headers = {"Content-Type": "application/json",}
+
+        username = randomname(10)
         data = {
-                "username":"Testuser",
+                "username":username,
                 "password":"Testpassword",
                 "preferred_channel":"email",
                 "channels":{ 
@@ -49,14 +67,26 @@ class create_users_test(unittest.TestCase):
                             "channel":"testchannel"}
                 }
         }
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers, data=json.dumps(data))        
-
+        response = requests.post(URL+"/users", headers=headers, data=json.dumps(data))        
         self.assertEqual(response.status_code, 200)
+        user_id = response.json().get('user_id')
+
+        get_response = requests.get(URL+"/users/"+user_id, headers=headers, data=json.dumps(data), cookies=self.auth_cookies)
+        self.assertEqual(get_response.status_code, 200)
+
+        self.assertEqual(get_response.json().get("User").get("username"), username)
+        self.assertEqual(get_response.json().get("User").get("preferred_channel"), data.get("preferred_channel"))
+        self.assertEqual(get_response.json().get("User").get("channels"), data.get("channels"))
+
+
+
+
+
 
     def test_create_user_fail_no_data(self):
 
         headers = {"Content-Type": "application/json",}
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -83,7 +113,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -110,7 +140,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -137,7 +167,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -150,7 +180,7 @@ class create_users_test(unittest.TestCase):
                 "preferred_channel":"email",
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -176,7 +206,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -202,7 +232,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -228,7 +258,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -253,7 +283,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -278,7 +308,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -305,7 +335,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -332,7 +362,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -359,7 +389,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -386,7 +416,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -414,7 +444,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -441,7 +471,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 
@@ -469,7 +499,7 @@ class create_users_test(unittest.TestCase):
                 }
         }
        
-        response = requests.post("http://0.0.0.0:5000/api/users", headers=headers,)        
+        response = requests.post(URL+"/users", headers=headers,)        
 
         self.assertEqual(response.status_code, 400)
 

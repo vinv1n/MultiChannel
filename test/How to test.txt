@@ -1,0 +1,13 @@
+
+
+Start server by using 
+    docker-compose build
+    docker-compose up
+
+in a separate terminal:
+    run 
+        python3 run_tests.py    (for all tests),
+    or
+        python3 name_of_test.py (select a single test file)
+
+then you can run down the docker container with ctrl+c and delete the data of that test docker image.
