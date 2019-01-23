@@ -71,10 +71,11 @@ def _init_channels():
     irc, telegram, email = get_channel_config(conf=config)
 
     _channels = {
-        "irc": IRC().send_message,
+        "irc": IRC(),
         "telegram": Telegram(telegram.get("token")),
         "email": EmailHandler(password=email.get("password"), address=email.get("address"),
-                                imap_server=email.get("imap"), host=email.get("smtp"))
+                                imap_server=email.get("imap"), host=email.get("smtp"),
+                                port_imap=email.get("imap_port"), port_smtp=email.get("smtp_port"))
     }
     return _channels
 

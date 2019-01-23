@@ -7,6 +7,7 @@ import threading
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from utils import MultiChannelException
 
 
 logger = logging.getLogger(__name__)
@@ -19,12 +20,12 @@ class EmailHandler:
         if host:
             self.server = smtplib.SMTP(host=host, port=port_smtp)
         else:
-            self.server = smtplib.SMTP("smtp.gmail.com", port=587)
+            raise MultiChannelException("Email server not configured")
 
         if imap_server:
             self.imap_server = imap_server
         else:
-            self.imap_server = "imap.gmail.com"
+            raise MultiChannelException("Email server not configured")
 
         self.password = password
         self.user = address
@@ -40,7 +41,7 @@ class EmailHandler:
         Setups email inbox
         """
         mail = imaplib.IMAP4_SSL(host=imap_server, port=port)
-        mail.login(address, password)
+        mail.login(address, "{}".format(password))
 
         mail.select("INBOX", readonly=True)
         return mail

@@ -27,16 +27,16 @@ def _new_message_post(request):
         'type' : msg_data.get('type'),
         'group_message': msg_data.get('group_message')
     }
-    
+
     response = requests.post('{}/messages'.format(URL), json=data, cookies=cookies, verify=False)
-    
+
     if response.status_code == 200:
         return render_template(
             'new_message.html',
             result='New post created!',
         )
     else:
-       
+
        return render_template(
             'new_message.html',
             result=response.status_code,
