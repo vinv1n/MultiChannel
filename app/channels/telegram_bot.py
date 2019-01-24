@@ -44,6 +44,9 @@ class Telegram:
         :param parameters: parameters for query strings
         :return: status code and response body
         """
+        # Updates all active chats
+        self._update_active()
+
         responses = []
         for user in message.recievers:
             entry = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
@@ -75,7 +78,7 @@ class Telegram:
         else:
             response = requests.get(_url)
 
-        return response 
+        return response
 
     def get_bot_status(self):
         """
