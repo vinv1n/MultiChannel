@@ -6,7 +6,7 @@ import uuid
 import requests
 import threading
 
-UPDATE_INTREVAL = 10 * 60 
+UPDATE_INTREVAL = 10 * 60
 
 logger = logging.getLogger(__name__)
 
