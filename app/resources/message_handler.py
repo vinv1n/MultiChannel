@@ -41,7 +41,7 @@ class Message_handler:
             self._database_handler = _database_handler
 
     def send_message(self, message):
-        
+
         """Send the message to the users using their preferred channels.
         :param dictionary message: New message that is sent.
         :param list users: List of user IDs who the message is sent to.
@@ -54,7 +54,7 @@ class Message_handler:
         message_id = self._database_handler.create_message(message_data=_message)
         if message_id is None:
              return None # Return none, to return {'msg': 'Error. Could not post the message'}, 400
-        
+
         user_informations = self._get_user_informations(users)
         if user_informations == None:
             return None
@@ -135,7 +135,9 @@ class Message_handler:
         body = message.get('body')
         group_message = message.get('group_message')
 
+        # FIXME now sending messages only to itself
         message = Message(body, message_type, group_message, user, channel_information)
+
         # channel is a instance of class
         success = channel.send_message(message)
         return success

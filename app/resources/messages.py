@@ -25,7 +25,6 @@ class Messages(Resource):
         except Exception as e:
             return False
 
-    
     @jwt_required
     def get(self):
         """
@@ -69,7 +68,7 @@ class Messages(Resource):
             return {"msg": "error with input data:"+ str(error_msg[0])}, 400
 
         if self.check_authorization() == True:
-            
+
             args = {}
             data = request.get_json()
             args['message'] = data['message']
@@ -127,9 +126,9 @@ class MessageSingle(Resource):
         """
         Delete a message with the given ID.
         """
-        if check_authorization() == True:
+        if self.check_authorization() == True:
             response = self.db_handler.delete_message(message_id)
-            if resposnse == None:
+            if response == None:
                 return {"msg": "Error during data handling"}
             else:
                 return {"msg": response}
