@@ -121,6 +121,8 @@ def _parse_patching_data(patching_data):
     if password and password == password_confirm:
         user_information['password'] = password
 
+    preferred_channel = patching_data.get('preferred_channel', [''])[0]
+    user_information['preferred_channel'] = preferred_channel
     return user_information
 
 
