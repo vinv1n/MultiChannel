@@ -68,25 +68,25 @@ def _user_info_page(response, user_id):
         return _user_not_found()
 
     _channels = _user_data.get('channels', {})
+    preferred_channel = _user_data.get('preferred_channel')
 
-    username = _user_data.get('username', '')
-    admin = _user_data.get('admin', '')
-    email = _channels.get('email', {}).get('address', '')
-    irc_nick = _channels.get('irc', {}).get('nickname', '')
-    irc_network = _channels.get('irc', {}).get('network', '')
-    slack_username = _channels.get('slack', {}).get('username', '')
-    slack_channel = _channels.get('slack', {}).get('channel', '')
-    telegram_username = _channels.get('telegram', {}).get('user_id', '')
+    user_information_kwargs = {
+        'username': _user_data.get('username', ''),
+        'admin': _user_data.get('admin', ''),
+        'email': _channels.get('email', {}).get('address', ''),
+        'irc_nick': _channels.get('irc', {}).get('nickname', ''),
+        'irc_network': _channels.get('irc', {}).get('network', ''),
+        'slack_username': _channels.get('slack', {}).get('username', ''),
+        'slack_channel': _channels.get('slack', {}).get('channel', ''),
+        'telegram_username': _channels.get('telegram', {}).get('user_id', ''),
+        'pref_{}'.format(preferred_channel): 'checked',
+    }
+
+    logger.warning(user_information_kwargs)
 
     return render_template(
         'user_info.html',
-        username=username,
-        admin=admin,
-        email=email,
-        irc_nick=irc_nick,
-        irc_network=irc_network,
-        slack_username=slack_username,
-        telegram_username=telegram_username,
+        **user_information_kwargs,
     )
 
 

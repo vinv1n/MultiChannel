@@ -65,27 +65,27 @@ div {
     <table>
       <tr>
 	<td><label for="fname">Email</label></td>
-	<td width="100%"> <input type="text" id="fname" name="email_address" placeholder="", value={{email}}><input type="radio" name="preferred_channel" value="email"><br>
+	<td width="100%"> <input type="text" id="fname" name="email_address" placeholder="", value={{email}}><input type="radio" name="preferred_channel" value="email" {{pref_email}}><br>
 	</td>
       </tr>
 
       <td> <label for="fname"></br>IRC-nick</label></td>
-      <td><input type="text" id="fname" name="irc_nick" placeholder="", value={{irc_nick}}><input type="radio" name="preferred_channel" value="irc"><br></td></tr>
+      <td><input type="text" id="fname" name="irc_nick" placeholder="", value={{irc_nick}}><input type="radio" name="preferred_channel" value="irc" {{pref_irc}}><br></td></tr>
 
 <td> <label for="fname"></br>IRC-network</label></td>
 <td> <input type="text" id="fname" name="irc_network" placeholder="", value={{irc_network}}><br></td></tr>
 
 <td> <label for="fname"></br>Slack username</label></td>
-<td> <input type="text" id="fname" name="slack_user" placeholder="", value={{slack_username}}><input type="radio" name="preferred_channel" value="slack"><br></td></tr>
+<td> <input type="text" id="fname" name="slack_user" placeholder="", value={{slack_username}}><input type="radio" name="preferred_channel" value="slack" {{pref_slack}}><br></td></tr>
 
 <td> <label for="fname"></br>Slack channel</label></td>
 <td> <input type="text" id="fname" name="slack_channel" placeholder="", value={{slack_channel}}><br></td></tr>
 	
 <td>  <label for="fname"></br>Telegram username</label></td>
-<td > <input type="text" id="fname" name="telegram" placeholder="", value={{telegram_username}}><input type="radio" name="preferred_channel" value="telegram"><br></td></tr>
+<td > <input type="text" id="fname" name="telegram" placeholder="", value={{telegram_username}}><input type="radio" name="preferred_channel" value="telegram" {{pref_telegram}}><br></td></tr>
 
 <td> <label for="fname"></br>Facebook username</label></td>
-<td> <input type="text" id="fname" name="facebook" placeholder="", value={{facebook_username}}><input type="radio" name="preferred_channel" value="facebook"><br></t></tr>
+<td> <input type="text" id="fname" name="facebook" placeholder="", value={{facebook_username}}><input type="radio" name="preferred_channel" value="facebook" {{pref_facebook}}><br></t></tr>
 
 </table>
 
