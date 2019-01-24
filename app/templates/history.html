@@ -15,7 +15,11 @@
     {% for message in messages %}
     <tr>
       <td><a href="/webui/messages/{{message.get('_id')}}">{{message.get('_id')}}</a></td>
+      {% if message.get('message')|length > 80 %}
+      <td>{{message.get('message')[:80]}}...</td>
+      {% else %}
       <td>{{message.get('message')}}</td>
+      {% endif %}
       <td>{{message.get('timestamp')}}</td>
       <td>{{message.get('type')}}</td>
     </tr>

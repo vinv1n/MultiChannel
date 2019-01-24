@@ -38,7 +38,7 @@
   <tbody>
     {%for receiver in receivers%}
     <tr>
-      <th scope="row">{{receiver}}</th>
+      <th scope="row">{{usernames.get(receiver, receiver)}}</th>
       <td>{{receivers[receiver].get('sent')}}</td>
       <td>{{receivers[receiver].get('seen')}}</td>
       <td>{{receivers[receiver].get('answer')}}</td>
@@ -46,8 +46,13 @@
     </tr>
     {%endfor%}
   </tbody>
-	</table>
+</table>
 {% endif %}
+
+<form method="POST" action="">
+    <button type="submit">Delete message</button>
+</form>
+
 
 </div>
 {% endblock %}

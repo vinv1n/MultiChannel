@@ -131,7 +131,7 @@ class MessageSingle(Resource):
             if response == None:
                 return {"msg": "Error during data handling"}
             else:
-                return {"msg": response}
+                return {"msg": response}, 200
         else:
             return {"msg" : "Unauthorized"}, 401
 

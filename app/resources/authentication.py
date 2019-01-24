@@ -1,4 +1,5 @@
-from flask import request, Response, jsonify
+import logging
+from flask import request, Response, jsonify, make_response
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity, get_raw_jwt, set_access_cookies,
     set_refresh_cookies, unset_jwt_cookies)
@@ -7,6 +8,8 @@ from passlib.utils import saslprep
 from jsonschema import validate
 from utils import json_validator
 from app.json_validation_schemas import login_schema
+
+logger = logging.getLogger(__name__)
 
 class UserLogin(Resource):
 
@@ -52,7 +55,7 @@ class Logout(Resource):
         try:
             jti = get_raw_jwt()['jti']
             self.blacklist.add(jti)
-            resp = {"msg": "Logged out"}
+            resp = make_response(jsonify(message='Logged out'), 200)
             unset_jwt_cookies(resp)
             return resp
         except Exception as e:

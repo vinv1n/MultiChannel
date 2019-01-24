@@ -1,8 +1,7 @@
 import logging
 import requests
-import json
 
-from flask import render_template, request, abort
+from flask import render_template, request, abort, flash, redirect
 from app.views.utils import URL
 
 
@@ -10,16 +9,13 @@ logger = logging.getLogger(__name__)
 
 
 def user_info(user_id):
-    logger.warning('user_info method: {}'.format(request.method))
-    logger.warning('{}'.format(request.args.get('delete_user')))
-
     if request.method == 'POST':
         # HTML forms can only use methods POST and GET
         # Therefore, POST is used here in place of PATCH
-        patching_data = _parse_patching_data(request)
+        patching_data = _parse_patching_data(request.form.to_dict(flat=False))
 
         return _user_info_base(
-            request = request,
+            request=request,
             method='PATCH',
             user_id=user_id,
             page=_user_patched,
@@ -32,7 +28,7 @@ def user_info(user_id):
     elif request.args.get('delete_user') == 'TRUE':
 
         return _user_info_base(
-            request = request,
+            request=request,
             method='DELETE',
             user_id=user_id,
             page=_user_deleted,
@@ -41,7 +37,7 @@ def user_info(user_id):
     else:
 
         return _user_info_base(
-            request = request,
+            request=request,
             method='GET',
             user_id=user_id,
             page=_user_info_page,
@@ -49,7 +45,6 @@ def user_info(user_id):
 
 
 def _user_info_base(request, method, user_id, page, json_data=None):
-    logger.warning('_user_info_base: {}, {}, {}'.format(method, user_id, json_data))
     response = requests.request(
         method=method,
         url='{}/users/{}'.format(URL, user_id),
@@ -58,15 +53,14 @@ def _user_info_base(request, method, user_id, page, json_data=None):
         verify=False
     )
 
-    if response.status_code != 200:
+    if response.status_code not in [200, 304]:
         abort(response.status_code)
 
-    return page(response)
+    return page(response, user_id)
 
 
-def _user_info_page(response):
+def _user_info_page(response, user_id):
     json_data = response.json()
-    logger.warning(json_data)
 
     _user_data = json_data.get('User', {})
 
@@ -74,43 +68,72 @@ def _user_info_page(response):
     if _user_data is None:
         return _user_not_found()
 
-    # hack
     _channels = _user_data.get('channels', {})
+    preferred_channel = _user_data.get('preferred_channel')
 
-    username = _user_data.get('username', '')
-    admin = _user_data.get('admin', '')
-    email = _channels.get('email', {}).get('address', '')
-    irc_nick = _channels.get('irc', {}).get('nickname', '')
-    irc_network = _channels.get('irc', {}).get('network', '')
-    slack_username = _channels.get('slack', {}).get('username', '')
-    slack_channel = _channels.get('slack', {}).get('channel', '')
-    telegram_username = _channels.get('telegram', {}).get('user_id', '')
+    user_information_kwargs = {
+        'username': _user_data.get('username', ''),
+        'admin': _user_data.get('admin', ''),
+        'email': _channels.get('email', {}).get('address', ''),
+        'irc_nick': _channels.get('irc', {}).get('nickname', ''),
+        'irc_network': _channels.get('irc', {}).get('network', ''),
+        'slack_username': _channels.get('slack', {}).get('username', ''),
+        'slack_channel': _channels.get('slack', {}).get('channel', ''),
+        'telegram_username': _channels.get('telegram', {}).get('user_id', ''),
+        'pref_{}'.format(preferred_channel): 'checked',
+    }
+
+    logger.warning(user_information_kwargs)
 
     return render_template(
         'user_info.html',
-        username=username,
-        admin=admin,
-        email=email,
-        irc_nick=irc_nick,
-        irc_network=irc_network,
-        slack_username=slack_username,
-        telegram_username=telegram_username,
+        **user_information_kwargs,
     )
 
 
-def _user_deleted(response):
-    return render_template(
-        'response.html',
-        msg='user deleted!',
-    )
+def _user_deleted(response, user_id):
+    flash('user deleted!')
+    return redirect('/webui/login')
 
 
-def _parse_patching_data(response):
-    json_data = response.json()
+def _parse_patching_data(patching_data):
+    user_information = dict()
+    channels = dict()
+
+    channel_mapping = {
+        'email':  {'email_address': 'address'},
+        'facebook': {'facebook': 'user_id'},
+        'telegram': {'telegram': 'user_id'},
+        'irc': {'irc_nick': 'nickname', 'irc_network': 'network'},
+        'slack': {'slack_channel': 'channel', 'slack_user': 'username'},
+    }
+
+    for channel, mapping in channel_mapping.items():
+        channels[channel] = {
+            _to: patching_data.get(_from)[0]
+            for _from, _to in mapping.items()
+        }
+
+    user_information['channels'] = channels
+
+    # Logic for confirming password change
+    password = patching_data.get('password')[0]
+    password_confirm = patching_data.get('password')[0]
+    if password and password == password_confirm:
+        user_information['password'] = password
+
+    preferred_channel = patching_data.get('preferred_channel', [''])[0]
+    user_information['preferred_channel'] = preferred_channel
+    return user_information
 
 
-def _user_patched(response):
-    pass
+def _user_patched(response, user_id):
+    if response.status_code == 304:
+        flash('Changes submitted, no changes were done.')
+    else:
+        flash('Changes submitted.')
+    return redirect('/webui/users/{}'.format(user_id))
+
 
 def _user_not_found():
     return render_template(

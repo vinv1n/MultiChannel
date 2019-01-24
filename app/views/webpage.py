@@ -64,7 +64,7 @@ def webpage(app):
     )
 
     app.add_url_rule(
-       rule="/webui/users/<string:user_id>",
+        rule="/webui/users/<string:user_id>",
         endpoint="user_info",
         view_func=user_info,
         methods=['GET', 'POST'],
@@ -74,7 +74,7 @@ def webpage(app):
         rule="/webui/messages/<string:message_id>",
         endpoint="message_status",
         view_func=message_status,
-        methods=['GET', 'DELETE'],
+        methods=['GET', 'POST'],
     )
 
     app.add_url_rule(
