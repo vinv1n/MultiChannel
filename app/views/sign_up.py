@@ -34,7 +34,7 @@ def _sign_up_post(request):
 
     msg = _sign_up_html_parser(form_dict)
 
-    response = requests.post('{}/users'.format(URL), json=msg)
+    response = requests.post('{}/users'.format(URL), json=msg, verify=False)
 
     if response.status_code == 200:
         flash('New user created, you can now log in.')

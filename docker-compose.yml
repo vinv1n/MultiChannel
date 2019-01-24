@@ -23,11 +23,26 @@ services:
     # might bork something when upgrated
     # needs testing when updated
     image: "mongo:4.1"
+    environment:
+      - LANG=en_US.UTF-8
+      - LANGUAGE=en_US.UTF-8
+      - LC_CTYPE="en_US.UTF-8"
+      - LC_ALL=en_US.UTF-8
     ports:
       - 27018:27017
     networks:
       - backend
-    command: mongod --ipv6 --noauth
+    command: mongod --ipv6 --noauth  # TODO add database authentication scripts
+
+  irc:
+    build:
+      context: ./MultiChannel-IRC-bot/
+    ports:
+      - 8000:8000
+    depends_on:
+      - api
+    networks:
+      - backend
 
 networks:
   backend:

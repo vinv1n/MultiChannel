@@ -50,6 +50,7 @@ def _user_info_base(request, method, user_id, page, json_data=None):
         url='{}/users/{}'.format(URL, user_id),
         json=json_data,
         cookies=request.cookies,
+        verify=False
     )
 
     if response.status_code not in [200, 304]:

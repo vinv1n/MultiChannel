@@ -7,8 +7,8 @@ logger = logging.getLogger(__name__)
 
 def logout_both():
 
-    response = requests.post('{}/logout'.format(URL), cookies=request.cookies)
-    response_2 = requests.post('{}/re-logout'.format(URL), cookies=request.cookies)
+    response = requests.post('{}/logout'.format(URL), cookies=request.cookies, verify=False)
+    response_2 = requests.post('{}/re-logout'.format(URL), cookies=request.cookies, verify=False)
 
     msg = 'Status: {}'.format(response.status_code)
     resp = make_response(render_template('logout.html',msg=msg))

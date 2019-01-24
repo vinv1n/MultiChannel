@@ -2,6 +2,10 @@ import logging
 import uuid
 import six
 import json
+import functools
+
+from flask import render_template, request, abort
+from jsonschema import validate, ValidationError
 
 if six.PY2:
     import urllib
@@ -11,11 +15,11 @@ else:
 logger = logging.getLogger(__name__)
 
 
-class MultiChannelExeption(Exception):
+class MultiChannelException(Exception):
     """
     Custom exeption class for MultiChannel app
     """
-    def __init__(self, message, error):
+    def __init__(self, message):
         super().__init__(message)
 
 
@@ -112,3 +116,21 @@ class Networking:
             return None, 400
 
         return response_json, 200
+
+def json_validator(*validator):
+    def decorator_json_validator(func):
+        @functools.wraps(func)
+        def wrapper_json_validator(*args, **kwargs):
+            result_json = request.get_json()
+            logger.critical(result_json)
+            try:
+                validate(validator[0], result_json)
+            except (ValidationError, AttributeError) as e:
+               return render_template("validation_error.html"), e
+            return func(*args, **kwargs)
+        return wrapper_json_validator
+
+    return decorator_json_validator
+
+def encode_string(string):
+    return string.decode("utf-8")

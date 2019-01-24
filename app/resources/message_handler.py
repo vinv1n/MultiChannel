@@ -21,6 +21,7 @@ Channel function should return whether the sending was succesful or not.
 from app.database.db_handler import database_handler
 import json
 import logging
+from utils import Message
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class Message_handler:
             self._database_handler = _database_handler
 
     def send_message(self, message):
-        
+
         """Send the message to the users using their preferred channels.
         :param dictionary message: New message that is sent.
         :param list users: List of user IDs who the message is sent to.
@@ -53,7 +54,7 @@ class Message_handler:
         message_id = self._database_handler.create_message(message_data=_message)
         if message_id is None:
              return None # Return none, to return {'msg': 'Error. Could not post the message'}, 400
-        
+
         user_informations = self._get_user_informations(users)
         if user_informations == None:
             return None
@@ -63,13 +64,11 @@ class Message_handler:
                 preferred_channel = information['preferred_channel']
                 if preferred_channel is None:
                     error_list.append(user_id)
-                    logger.warning("No preferred channel set. Skipping user: %s " %(str(user_id)))
+                    log.warning("No preferred channel set. Skipping user: %s " %(str(user_id)))
                     pass
             except Exception as e:
                 error_list.append(user_id)
                 pass
-            
-            
 
             _information = information['channels']
             channel_information = _information.get(preferred_channel)
@@ -77,7 +76,7 @@ class Message_handler:
             if channel_information is None:
                 #Add to id to error_list and skip
                 error_list.append(user_id)
-                logger.warning("No channel info set. Skipping user: %s " %(str(user_id)))
+                log.warning("No channel info set. Skipping user: %s " %(str(user_id)))
                 pass
 
             try:
@@ -94,7 +93,7 @@ class Message_handler:
                 error_list.append(user_id)
             if success:
                 self._set_message_sent_for_user(user=user_id)
-        
+
         if len(error_list) == 0:
             msg = "Successfully sent to all recipients"
         else:
@@ -136,7 +135,11 @@ class Message_handler:
         body = message.get('body')
         group_message = message.get('group_message')
 
-        success = channel(body, message_type, group_message, user, channel_information)
+        # FIXME now sending messages only to itself
+        message = Message(body, message_type, group_message, user, channel_information)
+
+        # channel is a instance of class
+        success = channel.send_message(message)
         return success
 
     def _set_message_sent_for_user(self, user):

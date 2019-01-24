@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def refresh_login():
-    response = requests.post('{}/re-login'.format(URL), cookies=request.cookies)
+    response = requests.post('{}/re-login'.format(URL), cookies=request.cookies, verify=False)
 
     #Hack to forward cookies to browser.
     msg = 'Status: {}'.format(response.status_code)
