@@ -3,6 +3,7 @@ from flask import request
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from jsonschema import validate
+from app.json_validation_schemas import user_schema
 
 class Messages(Resource):
     """
@@ -48,19 +49,7 @@ class Messages(Resource):
         Send a new message.
         """
 
-        message_schema={
-            'type': 'object',
-                'properties':{
-                    'message':{ 'type': 'string', 'minLength': 2, 'maxLength': 500 },
-                    'sender':{ 'type': 'string', 'minLength': 4, 'maxLength': 20 },
-                    'users':{ 'type': 'array', 'contains':{'type':'string'} },
-                    'type':{ 'type': 'string', 'enum':['fnf','answerable', 'traced'] },
-                    'group_message':{ 'type': 'string', 'enum':['True', 'False'] }
-
-                },
-                'required': [ 'message', 'users', 'sender', 'type', 'group_message' ],
-                'additionalProperties': False
-    }
+     
         try:
             validate(request.json,message_schema)
         except Exception as e:
