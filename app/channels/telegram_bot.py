@@ -4,9 +4,9 @@ import pprint
 import json
 import uuid
 import requests
-import pprint
+import threading
 
-# from tokens import TELEGRAM_TOKEN
+UPDATE_INTREVAL = 10 * 60 
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,9 @@ class Telegram:
         # database handler
         self.database = kwargs.get("database_handler")
 
-        self._update_active()
+        # thread for updating active chats runs in 10min
+        update_thread = threading.Timer(UPDATE_INTREVAL, self._update_active)
+        update_thread.run()
 
     def send_message(self, message):
         """
