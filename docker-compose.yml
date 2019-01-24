@@ -34,6 +34,16 @@ services:
       - backend
     command: mongod --ipv6 --noauth  # TODO add database authentication scripts
 
+  irc:
+    build:
+      context: ./MultiChannel-IRC-bot/
+    ports:
+      - 8000:8000
+    depends_on:
+      - api
+    networks:
+      - backend
+
 networks:
   backend:
     external: false
