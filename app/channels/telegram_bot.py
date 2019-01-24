@@ -39,16 +39,18 @@ class Telegram:
 
     def send_message(self, message):
         """
-        TODO make the bot accept private messages
         Send message to channels or users
         :param msg: message string
         :param parameters: parameters for query strings
         :return: status code and response body
         """
-        response = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
-                                            parameters={"text": message.message_body, "chat_id": self.active.get("user", "")})
+        responses = []
+        for user in message.recievers:
+            entry = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
+                                            parameters={"text": message.message_body, "chat_id": self.active.get(user, "")})
+            responses.append(entry.json())
 
-        return response
+        return responses
 
     def get_updates(self):
         """
@@ -73,7 +75,7 @@ class Telegram:
         else:
             response = requests.get(_url)
 
-        return response
+        return response 
 
     def get_bot_status(self):
         """
@@ -100,6 +102,8 @@ class Telegram:
     def _update_active(self):
         """
         A way more compex than it needs to be
+
+        TODO: create database table/collection for this
         """
         rjson = self.get_updates().json()
         results = rjson.get("result")
