@@ -42,6 +42,31 @@ user_schema={
                 'required': [ 'username', 'password', 'preferred_channel', 'channels' ],
                 'additionalProperties': False
         }
+
+user_patch_schema={
+            'type': 'object',
+                'properties':{
+                    'password':{ 'type': 'string', 'minLength': 4, 'maxLength': 32 },
+                    'preferred_channel':{ 'type': 'string', 'enum': ['email','facebook','telegram','irc','slack'] },
+                    'channels':{'type':'object', 'properties':{
+                        
+                        'email': {'type':'object','properties':{
+                            'address': {'type': 'string'}},
+                            'required': ['address'],'additionalProperties': False},
+
+                        'telegram': {'type':'object','properties':{
+                            'user_id':{'type': 'string'}},
+                            'required': ['user_id'],'additionalProperties': False},
+
+                        'irc': {'type':'object','properties':{
+                            'nickname':{'type': 'string'},
+                            'network':{'type': 'string'}},
+                            'required': ['nickname','network'],'additionalProperties': False},
+							
+                    },'required': ['email','telegram','irc'],'additionalProperties': False}
+                },
+                'additionalProperties': False
+        }
 		
 		
 message_schema={

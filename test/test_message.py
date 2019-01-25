@@ -9,8 +9,8 @@ URL = 'http://127.0.0.1:5000/api'
 
 
 class single_message_test(unittest.TestCase):
-
     def setUp(self):
+        print("----------Running message_test----------")
         headers = {'Content-type': 'application/json'}
         data = {"username": "admin", "password": "admin"}
         login_response = requests.post(URL+'/user-login', headers=headers, data=json.dumps(data))
@@ -70,19 +70,6 @@ class single_message_test(unittest.TestCase):
 
         
         self.assertEqual(get_response.json().get('message'), {})
-
-
-
-    
-    
-    # BUG you can delete any id with response 200
-    """def test_delete_message_fail_wrong_id(self):
-        headers = {}
-
-        response = requests.delete(URL+'/messages/12332423123sdfsdfsdf213213', headers=headers, cookies=self.auth_cookies)
-
-        self.assertEqual(response.status_code, 200)"""
-    
 
     
 

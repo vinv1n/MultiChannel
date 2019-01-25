@@ -17,8 +17,14 @@ class UserLogin(Resource):
         self.db_handler = db_handler
         self.jwt = jwt
 
-    @json_validator(login_schema)
     def post(self):
+
+        try:
+            validate(request.json,login_schema)
+        except Exception as e:
+            error_msg = str(e).split("\n")
+            return {"msg": "error with input data:"+ str(error_msg[0])}, 400
+
 
         parser = reqparse.RequestParser()
         parser.add_argument("username",location="json")

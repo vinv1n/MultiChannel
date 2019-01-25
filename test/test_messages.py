@@ -9,6 +9,7 @@ URL = 'http://127.0.0.1:5000/api'
 class get_messages_test(unittest.TestCase):
 
     def setUp(self):
+        print("----------Running get_messages_test----------")
         headers = {'Content-type': 'application/json'}
         data = {"username": "admin", "password": "admin"}
         login_response = requests.post(URL+'/user-login', headers=headers, data=json.dumps(data))
@@ -33,6 +34,7 @@ class get_messages_test(unittest.TestCase):
 class create_message_test(unittest.TestCase):
 
     def setUp(self):
+        print("----------Running create_messages_test----------")
         headers = {'Content-type': 'application/json'}
         data = {"username": "admin", "password": "admin"}
         login_response = requests.post(URL+'/user-login', headers=headers, data=json.dumps(data))
@@ -54,6 +56,7 @@ class create_message_test(unittest.TestCase):
                     "type" : 'fnf',
                     "group_message" : "False"
                 }
+
         response = requests.post(URL+'/messages',data = json.dumps(data), headers=headers, cookies=self.auth_cookies)
 
         self.assertEqual(response.status_code, 200)

@@ -4,7 +4,7 @@ from passlib.hash import pbkdf2_sha256
 from passlib.utils import saslprep
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from jsonschema import validate
-from app.json_validation_schemas import user_schema
+from app.json_validation_schemas import user_schema, user_patch_schema
 
 """"
 Users resource class. This class should handle everything
@@ -115,7 +115,7 @@ class UserSingle(Resource):
     def patch(self, user_id):
         
         try:
-            validate(request.json,user_schema)
+            validate(request.json,user_patch_schema)
         except Exception as e:
             error_msg = str(e).split("\n")
             return {"msg": "error with input data:"+ str(error_msg[0])}, 400

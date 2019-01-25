@@ -3,7 +3,7 @@ from flask import request
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from jsonschema import validate
-from app.json_validation_schemas import user_schema
+from app.json_validation_schemas import message_schema
 
 class Messages(Resource):
     """

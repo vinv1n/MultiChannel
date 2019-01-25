@@ -8,6 +8,9 @@ import json
 
 class Login_test(unittest.TestCase):
 
+    def setUp(self):
+        print("----------Running login_test----------")
+
 
     def test_login_success(self):
         headers = {'Content-type': 'application/json'}
@@ -80,6 +83,9 @@ class Login_test(unittest.TestCase):
 
 class Logout_test(unittest.TestCase):
 
+    def setUp(self):
+        print("----------Running logout_test----------")
+
     def test_logout(self):
         headers = {'Content-type': 'application/json'}
         data = {"username": "admin", "password": "admin"}
@@ -103,6 +109,9 @@ class Logout_test(unittest.TestCase):
 
 class LoginRefresh_test(unittest.TestCase):
 
+    def setUp(self):
+        print("----------Running login_refresh_test----------")
+
     def test_refresh_no_cookies(self):
 
         response = requests.post('http://0.0.0.0:5000/api/re-login')
@@ -125,6 +134,9 @@ class LoginRefresh_test(unittest.TestCase):
 
 
 class LogoutRefresh_test(unittest.TestCase):
+
+    def setUp(self):
+        print("----------Running logout_refresh_test----------")
 
     def test_logoutRefresh(self):
         headers = {'Content-type': 'application/json'}
