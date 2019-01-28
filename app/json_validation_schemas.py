@@ -21,7 +21,7 @@ user_schema={
                 'properties':{
                     'username':{ 'type': 'string', 'minLength': 4, 'maxLength': 20 },
                     'password':{ 'type': 'string', 'minLength': 4, 'maxLength': 32 },
-                    'preferred_channel':{ 'type': 'string', 'enum': ['email','facebook','telegram','irc','slack'] },
+                    'preferred_channel':{ 'type': 'string', 'enum': ['email','telegram','irc'] },
                     'channels':{'type':'object', 'properties':{
                         
                         'email': {'type':'object','properties':{
@@ -47,7 +47,7 @@ user_patch_schema={
             'type': 'object',
                 'properties':{
                     'password':{ 'type': 'string', 'minLength': 4, 'maxLength': 32 },
-                    'preferred_channel':{ 'type': 'string', 'enum': ['email','facebook','telegram','irc','slack'] },
+                    'preferred_channel':{ 'type': 'string', 'enum': ['email','telegram','irc'] },
                     'channels':{'type':'object', 'properties':{
                         
                         'email': {'type':'object','properties':{
