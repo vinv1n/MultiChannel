@@ -43,13 +43,20 @@ class IRC:
 
         return True
 
-    @staticmethod
-    def get_message(message):
+    def get_message(self, message_id):
         # TODO hide this
         # url to irc endpoint
-        url = "127.0.0.1:8000/messages/"
+        url = "127.0.0.1:8000/messages/{}".format(message_id)
 
-        response = networking.make_get_request(headers="{'id': {%s}}".format(message.get_message_id()), url=url)
+        response = requests.get(url=url).json().get("result")
+
+        for ans in response:
+            user = ans.get("user")
+            user_id = self.db.get_user_name(user)
+
+            answer = ans.get("answer")
+
+            self.db.add_answer_to_message(message_id, user_id, answer)
         if not response:
             return False
 
