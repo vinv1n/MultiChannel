@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class EmailHandler:
 
-    def __init__(self, password, address, imap_server, host=None, database, port_smtp=587, port_imap=993):
+    def __init__(self, password, address, imap_server, database, host=None, port_smtp=587, port_imap=993):
 
         if host:
             self.server = smtplib.SMTP(host=host, port=port_smtp)
