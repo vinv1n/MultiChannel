@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class EmailHandler:
 
-    def __init__(self, password, address, imap_server, host=None, port_smtp=587, port_imap=993):
+    def __init__(self, password, address, imap_server, host=None, database, port_smtp=587, port_imap=993):
 
         if host:
             self.server = smtplib.SMTP(host=host, port=port_smtp)
@@ -29,6 +29,8 @@ class EmailHandler:
 
         self.password = password
         self.user = address
+
+        self.db = database
 
         self.inbox = EmailHandler._init_inbox(password, self.imap_server, address, port_imap)
 
@@ -53,7 +55,7 @@ class EmailHandler:
     def _quit(self):
         self.server.quit()
 
-    def send_message(self, message):
+    def send_message(self, message, user, info):
         for receiver in message.receivers:
             toaddr = receiver.get("address")
             if message.message_type == "seen":
@@ -82,8 +84,7 @@ class EmailHandler:
 
         return results
 
-    @staticmethod
-    def _parse_raw_email(raw_message, id_):
+    def _parse_raw_email(self, raw_message):
 
         def get_body(msg):
             msg_type = msg.get_content_maintype()
@@ -100,27 +101,34 @@ class EmailHandler:
 
             return ""
 
+        subject = msg.get("subject")
+
+        user_id = None
+        message_id = None
+        try:
+            user_id = subject.split()[1]
+            message_id = subject.split()[2]
+        except Exception as e:
+            logger.critical("Error during parsing. Error %s", e)
+
+        if not all([message_id, user_id]):
+            return None
+
         msg = email.message_from_string(raw_message)
-        _return_value = {
-            "id": id_,
-            "title": msg.get("subject"),
-            "sender": email.utils.parseaddr(msg.get("to")),
-            "receiver": email.utils.parseaddr(msg.get("from")),
-            "body": get_body(msg)
-        }
+        success = self.db.add_answer_to_message(message_id, user_id, msg)
 
-        return _return_value
+        return success
 
-    def _format_message(self, receiver, text, seen=False):
+    def _format_message(self, receiver, text, message_id, seen=False):
         message = MIMEMultipart("alternative")
 
         # handle the addresses
         message['From'] = self.user
         message['To'] = receiver
 
-        message['Subject'] = text.get("subject")
+        message['Subject'] = "Multichannel {} {}".format(message_id, user_id)
 
-        html_format = EmailHandler.create_html(text=text.get("body", ""), seen=seen)
+        html_format = EmailHandler.create_html(text=text, seen=seen)
         html = MIMEText(html_format, "html")
 
         # TODO check if this is also needed
