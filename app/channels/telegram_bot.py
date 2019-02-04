@@ -28,6 +28,7 @@ class Telegram:
             raise ValueError("Invalid token")
 
         self.active = {}
+        self.send = {}  # FIXME make database table
 
         self.token = args[0]
         self.base_url = "https://api.telegram.org/bot{}/".format(self.token)
@@ -39,7 +40,7 @@ class Telegram:
         update_thread = threading.Timer(UPDATE_INTREVAL, self._update_active)
         update_thread.run()
 
-    def send_message(self, message):
+    def send_message(self, message, user, info):
         """
         Send message to channels or users
         :param msg: message string
@@ -49,11 +50,27 @@ class Telegram:
         # Updates all active chats
         self._update_active()
 
+        recievers = message.get("receivers")
+        msg_id = message.get("id")
+        message_ = "ID {}: {}".format(msg_id, message.get("message"))
+
+        chat_ids = []
+        for receiver in recievers:
+            user = self.database.get_user(receiver)  # TODO reduce db queries
+            nick = user["channels"]["telegram"]
+            id_ = self.active.get(nick, "")
+            if not id_:
+                logger.critical("Chat for user %s is not active", nick)
+                continue
+
+            chat_ids.append((nick, id_, user.get("_id")))
+
         responses = []
-        for user in message.recievers:
+        for nick, user, user_id in chat_ids:
             entry = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
-                                            parameters={"text": message.message_body, "chat_id": self.active.get(user, "")})
+                                            parameters={"text": message_, "chat_id": user})
             responses.append(entry.json())
+            self.send.update({nick: msg_id, "user_id": user_id})
 
         return responses
 
@@ -63,6 +80,24 @@ class Telegram:
         :return: response status_code, response body
         """
         response = self._make_request(request_type="GET", command=BOT_COMMANDS.get("updates"))
+        result = response.json().get("result"),
+        for message in result:
+            msg_ = None
+            try:
+                msg_ = message["message"]["chat"]
+            except KeyError:
+                logger.warning("Message could not be parsed")
+
+            if not msg_:
+                continue
+
+            username = msg_.get("username")
+            answer = msg_.get("text")
+            info = self.send.get(username)
+            msg_id = info.get(username)
+            self.database.add_asnwer_to_message(msg_id, info.get("user_id"), answer)
+            self.send.pop(username)
+
         return response
 
     def _make_request(self, request_type, command, parameters=None):
