@@ -56,12 +56,14 @@ class EmailHandler:
         self.server.quit()
 
     def send_message(self, message, user, info):
-        for receiver in message.receivers:
-            toaddr = receiver.get("address")
+        receivers = message.get("receivers")
+        id_ = message.get("id")
+        for receiver in receivers:
+            toaddr = self.db.get_user(receiver).get("channels").get("email")
             if message.message_type == "seen":
-                formatted_message = self._format_message(toaddr, message.body, seen=True)
+                formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_, seen=True)
             else:
-                formatted_message = self._format_message(toaddr, message.body)
+                formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_)
 
             self.server.sendmail(self.user, to_addrs=toaddr, msg=formatted_message)
 
@@ -76,7 +78,7 @@ class EmailHandler:
         for id_ in id_list:
             res, message = self.inbox.uid("fetch", id_, "(RFC822)")
             raw_message = message[0][1]
-            parsed_email = self._parse_raw_email(raw_message, id_)
+            parsed_email = self._parse_raw_email(raw_message)
             results.append(parsed_email)
 
         if not results:
@@ -101,6 +103,8 @@ class EmailHandler:
 
             return ""
 
+        msg = email.message_from_string(raw_message)
+
         subject = msg.get("subject")
 
         user_id = None
@@ -114,12 +118,11 @@ class EmailHandler:
         if not all([message_id, user_id]):
             return None
 
-        msg = email.message_from_string(raw_message)
         success = self.db.add_answer_to_message(message_id, user_id, msg)
 
         return success
 
-    def _format_message(self, receiver, text, message_id, seen=False):
+    def _format_message(self, receiver, text, message_id, user_id, seen=False):
         message = MIMEMultipart("alternative")
 
         # handle the addresses
@@ -132,7 +135,7 @@ class EmailHandler:
         html = MIMEText(html_format, "html")
 
         # TODO check if this is also needed
-        plaintext = MIMEText(text.get("body"), "plaintext")
+        plaintext = MIMEText(text, "plaintext")
 
         message.attach(plaintext)
         message.attach(html)
