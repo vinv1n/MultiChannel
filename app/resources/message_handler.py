@@ -139,7 +139,7 @@ class Message_handler:
         users = self._database_handler.get_users()
 
         # FIXME now sending messages only to itself
-        success = channel.send_message(message, user, channel_information, users)
+        success = channel.send_message(message, user, users, channel_information)
         return success
 
     def _set_message_sent_for_user(self, user):
