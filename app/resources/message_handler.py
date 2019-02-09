@@ -135,11 +135,11 @@ class Message_handler:
         body = message.get('body')
         group_message = message.get('group_message')
 
-        # FIXME now sending messages only to itself
-        message = Message(body, message_type, group_message, user, channel_information)
+        # let's make less queries
+        users = self._database_handler.get_users()
 
-        # channel is a instance of class
-        success = channel.send_message(message)
+        # FIXME now sending messages only to itself
+        success = channel.send_message(message, user, channel_information, users)
         return success
 
     def _set_message_sent_for_user(self, user):

@@ -3,6 +3,7 @@ Message handler for IRC api
 """
 import logging
 import requests
+from utils import get_user
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ class IRC:
     def __init__(self, database):
         self.db = database
 
-    def send_message(self, message, user, info):
+    def send_message(self, message, user, users, info):
         """
         :param message: instance of message class
         :return: True if message was send succesfully, otherwise False
@@ -24,14 +25,14 @@ class IRC:
 
         result = []
         for user in rc:
-            user_info = self.db.get_user(user)
+            user_info = get_user(user, users)
             nick = user_info.get("channels").get("irc").get("nickname")
             if not nick:
                 continue
 
             data = {
                 "receiver": nick,
-                "message_id": message.get("id"),
+                "message_id": message.get("_id"),
                 "message": message.get("message")
             }
 

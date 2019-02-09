@@ -7,7 +7,7 @@ import threading
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from utils import MultiChannelException
+from utils import MultiChannelException, get_user
 
 
 logger = logging.getLogger(__name__)
@@ -55,11 +55,15 @@ class EmailHandler:
     def _quit(self):
         self.server.quit()
 
-    def send_message(self, message, user, info):
+    def send_message(self, message, user, users, info):
         receivers = message.get("receivers")
-        id_ = message.get("id")
+        id_ = message.get("_id")
         for receiver in receivers:
-            toaddr = self.db.get_user(receiver).get("channels").get("email")
+            user = get_user(receiver, users)
+            toaddr = user.get("channels").get("email")
+            if not toaddr:
+                continue
+
             if message.message_type == "seen":
                 formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_, seen=True)
             else:

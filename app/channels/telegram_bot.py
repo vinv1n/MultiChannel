@@ -6,6 +6,8 @@ import uuid
 import requests
 import threading
 
+from utils import get_user
+
 UPDATE_INTREVAL = 10 * 60
 
 logger = logging.getLogger(__name__)
@@ -22,41 +24,44 @@ BOT_COMMANDS = {
 
 class Telegram:
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, database, token):
 
-        if not isinstance(args[0], str):
+        if not isinstance(token, str):
             raise ValueError("Invalid token")
 
         self.active = {}
         self.send = {}  # FIXME make database table
 
-        self.token = args[0]
+        self.token = token
         self.base_url = "https://api.telegram.org/bot{}/".format(self.token)
 
         # database handler
-        self.database = kwargs.get("database_handler")
+        self.database = database
+        self._update_active()
 
-        # thread for updating active chats runs in 10min
-        update_thread = threading.Timer(UPDATE_INTREVAL, self._update_active)
-        update_thread.run()
-
-    def send_message(self, message, user, info):
+    def send_message(self, message, user, users, info):
         """
         Send message to channels or users
         :param msg: message string
         :param parameters: parameters for query strings
         :return: status code and response body
         """
+
         # Updates all active chats
         self._update_active()
-
         recievers = message.get("receivers")
-        msg_id = message.get("id")
+        msg_id = message.get("_id")
         message_ = "ID {}: {}".format(msg_id, message.get("message"))
+
+        users = self.database.get_users()
 
         chat_ids = []
         for receiver in recievers:
-            user = self.database.get_user(receiver)  # TODO reduce db queries
+
+            user = get_user(receiver, users)
+            if not user:
+                continue
+
             nick = user["channels"]["telegram"]
             id_ = self.active.get(nick, "")
             if not id_:
@@ -68,7 +73,7 @@ class Telegram:
         responses = []
         for nick, user, user_id in chat_ids:
             entry = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
-                                            parameters={"text": message_, "chat_id": user})
+                                            parameters={"text": message_, "chat_id": self.active.get(nick)})
             responses.append(entry.json())
             self.send.update({nick: msg_id, "user_id": user_id})
 
@@ -80,12 +85,15 @@ class Telegram:
         :return: response status_code, response body
         """
         response = self._make_request(request_type="GET", command=BOT_COMMANDS.get("updates"))
-        result = response.json().get("result"),
+        result = response.json().get("result")
+        if not result:
+            return {}
+
         for message in result:
             msg_ = None
             try:
                 msg_ = message["message"]["chat"]
-            except KeyError:
+            except (KeyError, TypeError):
                 logger.warning("Message could not be parsed")
 
             if not msg_:
@@ -94,6 +102,11 @@ class Telegram:
             username = msg_.get("username")
             answer = msg_.get("text")
             info = self.send.get(username)
+            if not info:
+                if not self.active.get(username):
+                    self.active[username] = msg_.get("id")
+                return {}
+
             msg_id = info.get(username)
             self.database.add_asnwer_to_message(msg_id, info.get("user_id"), answer)
             self.send.pop(username)
@@ -145,7 +158,11 @@ class Telegram:
 
         TODO: create database table/collection for this
         """
-        rjson = self.get_updates().json()
+        rjson = self.get_updates()
+        if not rjson:
+            return {}
+
+        rjson = rjson.json()
         results = rjson.get("result")
 
         entry = {}
