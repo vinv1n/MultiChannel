@@ -2,15 +2,17 @@
 Message handler for IRC api
 """
 import logging
-from utils import Message, Networking
+import requests
+from utils import get_user
 
 logger = logging.getLogger(__name__)
 
-networking = Networking()  # class that handles requests
 class IRC:
 
-    @staticmethod
-    def send_message(body, message_type, group_message, user, channel_information):
+    def __init__(self, database):
+        self.db = database
+
+    def send_message(self, message, user, users, info):
         """
         :param message: instance of message class
         :return: True if message was send succesfully, otherwise False
@@ -19,21 +21,43 @@ class IRC:
         # TODO hide this
         # url to irc endpoint
         url = "127.0.0.1:8000/send/"
-        message = Message(body, message_type, group_message, user, channel_information)
+        rc = message.get("receivers")
 
-        response = networking.make_post_request(headers=message.as_dict(), url=url)
-        if not response:
+        result = []
+        for user in rc:
+            user_info = get_user(user, users)
+            nick = user_info.get("channels").get("irc").get("nickname")
+            if not nick:
+                continue
+
+            data = {
+                "receiver": nick,
+                "message_id": message.get("_id"),
+                "message": message.get("message")
+            }
+
+            response = requests.post(url, data=data)
+            result.append(response.json())
+
+        if not result:
             return False
 
         return True
 
-    @staticmethod
-    def get_message(message):
+    def get_message(self, message_id):
         # TODO hide this
         # url to irc endpoint
-        url = "127.0.0.1:8000/messages/"
+        url = "127.0.0.1:8000/messages/{}".format(message_id)
 
-        response = networking.make_get_request(headers="{'id': {%s}}".format(message.get_message_id()), url=url)
+        response = requests.get(url=url).json().get("result")
+
+        for ans in response:
+            user = ans.get("user")
+            user_id = self.db.get_user_name(user)
+
+            answer = ans.get("answer")
+
+            self.db.add_answer_to_message(message_id, user_id, answer)
         if not response:
             return False
 

@@ -7,7 +7,7 @@ import threading
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from utils import MultiChannelException
+from utils import MultiChannelException, get_user
 
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class EmailHandler:
 
-    def __init__(self, password, address, imap_server, host=None, port_smtp=587, port_imap=993):
+    def __init__(self, password, address, imap_server, database, host=None, port_smtp=587, port_imap=993):
 
         if host:
             self.server = smtplib.SMTP(host=host, port=port_smtp)
@@ -29,6 +29,8 @@ class EmailHandler:
 
         self.password = password
         self.user = address
+
+        self.db = database
 
         self.inbox = EmailHandler._init_inbox(password, self.imap_server, address, port_imap)
 
@@ -53,13 +55,19 @@ class EmailHandler:
     def _quit(self):
         self.server.quit()
 
-    def send_message(self, message):
-        for receiver in message.receivers:
-            toaddr = receiver.get("address")
+    def send_message(self, message, user, users, info):
+        receivers = message.get("receivers")
+        id_ = message.get("_id")
+        for receiver in receivers:
+            user = get_user(receiver, users)
+            toaddr = user.get("channels").get("email")
+            if not toaddr:
+                continue
+
             if message.message_type == "seen":
-                formatted_message = self._format_message(toaddr, message.body, seen=True)
+                formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_, seen=True)
             else:
-                formatted_message = self._format_message(toaddr, message.body)
+                formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_)
 
             self.server.sendmail(self.user, to_addrs=toaddr, msg=formatted_message)
 
@@ -74,7 +82,7 @@ class EmailHandler:
         for id_ in id_list:
             res, message = self.inbox.uid("fetch", id_, "(RFC822)")
             raw_message = message[0][1]
-            parsed_email = self._parse_raw_email(raw_message, id_)
+            parsed_email = self._parse_raw_email(raw_message)
             results.append(parsed_email)
 
         if not results:
@@ -82,8 +90,7 @@ class EmailHandler:
 
         return results
 
-    @staticmethod
-    def _parse_raw_email(raw_message, id_):
+    def _parse_raw_email(self, raw_message):
 
         def get_body(msg):
             msg_type = msg.get_content_maintype()
@@ -101,30 +108,39 @@ class EmailHandler:
             return ""
 
         msg = email.message_from_string(raw_message)
-        _return_value = {
-            "id": id_,
-            "title": msg.get("subject"),
-            "sender": email.utils.parseaddr(msg.get("to")),
-            "receiver": email.utils.parseaddr(msg.get("from")),
-            "body": get_body(msg)
-        }
 
-        return _return_value
+        subject = msg.get("subject")
+        answer = get_body(msg)
 
-    def _format_message(self, receiver, text, seen=False):
+        user_id = None
+        message_id = None
+        try:
+            user_id = subject.split()[1]
+            message_id = subject.split()[2]
+        except Exception as e:
+            logger.critical("Error during parsing. Error %s", e)
+
+        if not all([message_id, user_id]):
+            return None
+
+        success = self.db.add_answer_to_message(message_id, user_id, answer)
+
+        return success
+
+    def _format_message(self, receiver, text, message_id, user_id, seen=False):
         message = MIMEMultipart("alternative")
 
         # handle the addresses
         message['From'] = self.user
         message['To'] = receiver
 
-        message['Subject'] = text.get("subject")
+        message['Subject'] = "Multichannel {} {}".format(message_id, user_id)
 
-        html_format = EmailHandler.create_html(text=text.get("body", ""), seen=seen)
+        html_format = EmailHandler.create_html(text=text, seen=seen)
         html = MIMEText(html_format, "html")
 
         # TODO check if this is also needed
-        plaintext = MIMEText(text.get("body"), "plaintext")
+        plaintext = MIMEText(text, "plaintext")
 
         message.attach(plaintext)
         message.attach(html)

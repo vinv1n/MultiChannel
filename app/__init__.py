@@ -44,7 +44,7 @@ def _channel(body, _type, group, user, channel_info, _name):
     EmailHandler()
     """
 
-def _init_channels():
+def _init_channels(database):
     def load_config():
         conf = None
         try:
@@ -71,11 +71,11 @@ def _init_channels():
     irc, telegram, email = get_channel_config(conf=config)
 
     _channels = {
-        "irc": IRC(),
-        "telegram": Telegram(telegram.get("token")),
+        "irc": IRC(database),
+        "telegram": Telegram(token=telegram.get("token"), database=database),
         "email": EmailHandler(password=email.get("password"), address=email.get("address"),
                                 imap_server=email.get("imap"), host=email.get("smtp"),
-                                port_imap=email.get("imap_port"), port_smtp=email.get("smtp_port"))
+                                port_imap=email.get("imap_port"), port_smtp=email.get("smtp_port"), database=database)
     }
     return _channels
 
@@ -125,8 +125,8 @@ def create_app(args):
 
     api = Api(app)
 
-    channels = _init_channels()
     db_handler = database_handler()
+    channels = _init_channels(db_handler)
     message_handler = Message_handler(channels=channels, _database_handler=db_handler)
 
     jwt = JWTManager(app)

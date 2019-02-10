@@ -23,6 +23,17 @@ class MultiChannelException(Exception):
         super().__init__(message)
 
 
+def get_user(user_id, users):
+    """
+    Returns given user id from all id
+    """
+    for user in users:
+        _id = user.get("_id")
+        if _id == user_id:
+            return user
+
+    return {}
+
 
 class Message:
     """
