@@ -110,6 +110,7 @@ class EmailHandler:
         msg = email.message_from_string(raw_message)
 
         subject = msg.get("subject")
+        answer = get_body(msg)
 
         user_id = None
         message_id = None
@@ -122,7 +123,7 @@ class EmailHandler:
         if not all([message_id, user_id]):
             return None
 
-        success = self.db.add_answer_to_message(message_id, user_id, msg)
+        success = self.db.add_answer_to_message(message_id, user_id, answer)
 
         return success
 
