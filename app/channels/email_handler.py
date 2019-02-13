@@ -58,6 +58,8 @@ class EmailHandler:
     def send_message(self, message, user, users, info):
         receivers = message.get("receivers")
         id_ = message.get("_id")
+
+        results = []
         for receiver in receivers:
             user = get_user(receiver, users)
             toaddr = user.get("channels").get("email").get("address")
@@ -69,9 +71,19 @@ class EmailHandler:
             else:
                 formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_)
 
-            self.server.sendmail(self.user, to_addrs=toaddr, msg=formatted_message)
+            success = False
+            try:
+                self.server.sendmail(self.user, to_addrs=toaddr, msg=formatted_message)
+                success = True
+            except Exception as e:
+                logger.warning("Error %s during sending", e)
 
-        return True
+            if not success:
+                continue
+
+            results.append(receiver)
+
+        return results
 
     def get_updates(self):
 

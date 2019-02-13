@@ -23,7 +23,7 @@ class IRC:
         url = "127.0.0.1:8000/send/"
         rc = message.get("receivers")
 
-        result = []
+        results = []
         for user in rc:
             user_info = get_user(user, users)
             nick = user_info.get("channels").get("irc").get("nickname")
@@ -37,12 +37,12 @@ class IRC:
             }
 
             response = requests.post(url, data=data)
-            result.append(response.json())
+            if response.status_code != 200:
+                continue
 
-        if not result:
-            return False
+            results.append(user)
 
-        return True
+        return results
 
     def get_message(self, message_id):
         # TODO hide this
