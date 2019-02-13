@@ -34,7 +34,7 @@ def _sign_up_post(request):
 
     msg = _sign_up_html_parser(form_dict)
 
-    response = requests.post('{}/users'.format(URL), json=msg)
+    response = requests.post('{}/users'.format(URL), json=msg, verify=False)
 
     if response.status_code == 200:
         flash('New user created, you can now log in.')
@@ -52,10 +52,8 @@ def _sign_up_html_parser(form_dict):
         "preferred_channel": form_dict.get('preferred_channel', [''])[0],
         "channels": {
             "email": {"address": form_dict.get('email_address', [''])[0]},
-            "facebook": {"user_id": form_dict.get('facebook', [''])[0]},
             "telegram": {"user_id": form_dict.get('telegram', [''])[0]},
             "irc": {"nickname": form_dict.get('irc_nick', [''])[0], "network": form_dict.get('irc_network', [''])[0]},
-            "slack": {"channel": form_dict.get('slack_channel', [''])[0], "username": form_dict.get('slack_user', [''])[0]},
         }
     }
     return user_data

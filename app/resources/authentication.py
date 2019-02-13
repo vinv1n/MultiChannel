@@ -6,6 +6,8 @@ from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_r
 from passlib.hash import pbkdf2_sha256
 from passlib.utils import saslprep
 from jsonschema import validate
+from utils import json_validator
+from app.json_validation_schemas import login_schema
 
 logger = logging.getLogger(__name__)
 
@@ -15,30 +17,19 @@ class UserLogin(Resource):
         self.db_handler = db_handler
         self.jwt = jwt
 
-
-   
     def post(self):
 
-        login_schema={
-            'type': 'object',
-                'properties':{
-                    'username':{ 'type': 'string'},
-                    'password':{ 'type': 'string'}
-                },
-                'required': [ 'username', 'password' ],
-                'additionalProperties': False
-    }
         try:
             validate(request.json,login_schema)
         except Exception as e:
             error_msg = str(e).split("\n")
             return {"msg": "error with input data:"+ str(error_msg[0])}, 400
 
+
         parser = reqparse.RequestParser()
         parser.add_argument("username",location="json")
         parser.add_argument("password",location="json")
         args = parser.parse_args()
-
 
         user = self.db_handler.get_user_name(args['username'])
         if user is None:
@@ -65,7 +56,6 @@ class Logout(Resource):
         self.jwt = jwt
         self.blacklist = blacklist
 
-    
     @jwt_required
     def post(self):
         try:

@@ -1,9 +1,13 @@
 import smtplib
 import logging
+import imaplib
+import email
 import os
+import threading
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from utils import MultiChannelException, get_user
 
 
 logger = logging.getLogger(__name__)
@@ -11,18 +15,38 @@ logger = logging.getLogger(__name__)
 
 class EmailHandler:
 
-    def __init__(self, password, address, host=None, port=587):
+    def __init__(self, password, address, imap_server, database, host=None, port_smtp=587, port_imap=993):
 
         if host:
-            self.server = smtplib.SMTP(host=host, port=port)
+            self.server = smtplib.SMTP(host=host, port=port_smtp)
         else:
-            self.server = smtplib.SMTP("smtp.gmail.com", port=587)
+            raise MultiChannelException("Email server not configured")
+
+        if imap_server:
+            self.imap_server = imap_server
+        else:
+            raise MultiChannelException("Email server not configured")
 
         self.password = password
         self.user = address
 
+        self.db = database
+
+        self.inbox = EmailHandler._init_inbox(password, self.imap_server, address, port_imap)
+
         # TODO check if is always needed
         self._login()
+
+    @staticmethod
+    def _init_inbox(password, imap_server, address, port):
+        """
+        Setups email inbox
+        """
+        mail = imaplib.IMAP4_SSL(host=imap_server, port=port)
+        mail.login(address, "{}".format(password))
+
+        mail.select("INBOX", readonly=True)
+        return mail
 
     def _login(self):
         self.server.starttls()
@@ -31,33 +55,93 @@ class EmailHandler:
     def _quit(self):
         self.server.quit()
 
-    def send_message(self, text, receivers, msg_type):
+    def send_message(self, message, user, users, info):
+        receivers = message.get("receivers")
+        id_ = message.get("_id")
         for receiver in receivers:
-            toaddr = receiver.get("address")
-            if msg_type == "seen":
-                formatted_message = self._format_message(toaddr, text, seen=True)
+            user = get_user(receiver, users)
+            toaddr = user.get("channels").get("email").get("address")
+            if not toaddr:
+                continue
+
+            if message.get("type") == "seen":
+                formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_, seen=True)
             else:
-                formatted_message = self._format_message(toaddr, text)
+                formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_)
 
             self.server.sendmail(self.user, to_addrs=toaddr, msg=formatted_message)
 
-    def get_status(self):
-        pass
+        return True
 
-    def _format_message(self, receiver, text, seen=False):
+    def get_status(self, message_id):
+
+        results, data = self.inbox.uid("search", None, "UNSEEN")
+        id_list  = data[0].split()
+
+        results = []
+        for id_ in id_list:
+            res, message = self.inbox.uid("fetch", id_, "(RFC822)")
+            raw_message = message[0][1]
+            parsed_email = self._parse_raw_email(raw_message)
+            results.append(parsed_email)
+
+        if not results:
+            return None
+
+        return results
+
+    def _parse_raw_email(self, raw_message):
+
+        def get_body(msg):
+            msg_type = msg.get_content_maintype()
+            if msg_type == "text":
+                return msg.get_payload()
+
+            if msg_type != "multipart":
+                logger.critical("Invalid email response format. Format: %s", msg_type)
+                return ""
+
+            for content in msg.get_payload():
+                if content.get_content_maintype() == "text":
+                    return content.get_payload()
+
+            return ""
+
+        msg = email.message_from_string(raw_message)
+
+        subject = msg.get("subject")
+        answer = get_body(msg)
+
+        user_id = None
+        message_id = None
+        try:
+            user_id = subject.split()[1]
+            message_id = subject.split()[2]
+        except Exception as e:
+            logger.critical("Error during parsing. Error %s", e)
+
+        if not all([message_id, user_id]):
+            return None
+
+        success = self.db.add_answer_to_message(message_id, user_id, answer)
+
+        return success
+
+    def _format_message(self, receiver, text, message_id, user_id, seen=False):
+
         message = MIMEMultipart("alternative")
 
         # handle the addresses
         message['From'] = self.user
         message['To'] = receiver
 
-        message['Subject'] = text.get("subject")
+        message['Subject'] = "Multichannel {} {}".format(message_id, user_id)
 
-        html_format = EmailHandler.create_html(text=text.get("body", ""), seen=seen)
+        html_format = EmailHandler.create_html(text=text, seen=seen)
         html = MIMEText(html_format, "html")
 
         # TODO check if this is also needed
-        plaintext = MIMEText(text.get("body"), "plaintext")
+        plaintext = MIMEText(text, "plaintext")
 
         message.attach(plaintext)
         message.attach(html)

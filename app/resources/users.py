@@ -4,6 +4,7 @@ from passlib.hash import pbkdf2_sha256
 from passlib.utils import saslprep
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from jsonschema import validate
+from app.json_validation_schemas import user_schema, user_patch_schema
 
 """"
 Users resource class. This class should handle everything
@@ -44,43 +45,6 @@ class Users(Resource):
 
     def post(self):
         """ Post a new user to the database. Make a dictionary to pass to the db_handler."""
-
-        user_schema={
-            'type': 'object',
-                'properties':{
-                    'username':{ 'type': 'string', 'minLength': 4, 'maxLength': 20 },
-                    'password':{ 'type': 'string', 'minLength': 4, 'maxLength': 32 },
-                    'preferred_channel':{ 'type': 'string', 'enum': ['email','facebook','telegram','irc','slack'] },
-                    'channels':{'type':'object', 'properties':{
-                        
-                        'email': {'type':'object','properties':{
-                            'address': {'type': 'string'}},
-                            'required': ['address'],'additionalProperties': False},
-                        
-                        
-                        'facebook': {'type':'object','properties':{
-                            'user_id': {'type': 'string'}},
-                            'required': ['user_id'],'additionalProperties': False},
-
-
-                        'telegram': {'type':'object','properties':{
-                            'user_id':{'type': 'string'}},
-                            'required': ['user_id'],'additionalProperties': False},
-
-                        'irc': {'type':'object','properties':{
-                            'nickname':{'type': 'string'},
-                            'network':{'type': 'string'}},
-                            'required': ['nickname','network'],'additionalProperties': False},
-
-                        'slack': {'type':'object','properties':{
-                            'username':{'type': 'string'},
-                            'channel':{'type': 'string'}},
-                            'required': ['username','channel'],'additionalProperties': False}
-                    },'required': ['email','facebook','telegram','irc','slack'],'additionalProperties': False}
-                },
-                'required': [ 'username', 'password', 'preferred_channel', 'channels' ],
-                'additionalProperties': False
-        }
 
         try:
             validate(request.json,user_schema)
@@ -149,42 +113,9 @@ class UserSingle(Resource):
 
     @jwt_required
     def patch(self, user_id):
-        user_schema={
-            'type': 'object',
-                'properties':{
-                    'password':{ 'type': 'string', 'minLength': 4, 'maxLength': 32 },
-                    'preferred_channel':{ 'type': 'string', 'enum': ['email','facebook','telegram','irc','slack'] },
-                    'channels':{'type':'object', 'properties':{
-                        
-                        'email': {'type':'object','properties':{
-                            'address': {'type': 'string'}},
-                            'required': ['address'],'additionalProperties': False},
-                        
-                        
-                        'facebook': {'type':'object','properties':{
-                            'user_id': {'type': 'string'}},
-                            'required': ['user_id'],'additionalProperties': False},
-
-
-                        'telegram': {'type':'object','properties':{
-                            'user_id':{'type': 'string'}},
-                            'required': ['user_id'],'additionalProperties': False},
-
-                        'irc': {'type':'object','properties':{
-                            'nickname':{'type': 'string'},
-                            'network':{'type': 'string'}},
-                            'required': ['nickname','network'],'additionalProperties': False},
-
-                        'slack': {'type':'object','properties':{
-                            'username':{'type': 'string'},
-                            'channel':{'type': 'string'}},
-                            'required': ['username','channel'],'additionalProperties': False}
-                    },'additionalProperties': False}
-                },
-                'additionalProperties': False
-        }
+        
         try:
-            validate(request.json,user_schema)
+            validate(request.json,user_patch_schema)
         except Exception as e:
             error_msg = str(e).split("\n")
             return {"msg": "error with input data:"+ str(error_msg[0])}, 400

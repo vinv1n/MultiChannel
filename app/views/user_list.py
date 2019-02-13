@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def user_list():
-    response = requests.get('{}/users'.format(URL), cookies=request.cookies)
+    response = requests.get('{}/users'.format(URL), cookies=request.cookies, verify=False)
 
     if response.status_code != 200:
         return render_template(

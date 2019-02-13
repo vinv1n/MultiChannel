@@ -50,6 +50,7 @@ def _user_info_base(request, method, user_id, page, json_data=None):
         url='{}/users/{}'.format(URL, user_id),
         json=json_data,
         cookies=request.cookies,
+        verify=False
     )
 
     if response.status_code not in [200, 304]:
@@ -76,8 +77,6 @@ def _user_info_page(response, user_id):
         'email': _channels.get('email', {}).get('address', ''),
         'irc_nick': _channels.get('irc', {}).get('nickname', ''),
         'irc_network': _channels.get('irc', {}).get('network', ''),
-        'slack_username': _channels.get('slack', {}).get('username', ''),
-        'slack_channel': _channels.get('slack', {}).get('channel', ''),
         'telegram_username': _channels.get('telegram', {}).get('user_id', ''),
         'pref_{}'.format(preferred_channel): 'checked',
     }
@@ -101,10 +100,8 @@ def _parse_patching_data(patching_data):
 
     channel_mapping = {
         'email':  {'email_address': 'address'},
-        'facebook': {'facebook': 'user_id'},
         'telegram': {'telegram': 'user_id'},
         'irc': {'irc_nick': 'nickname', 'irc_network': 'network'},
-        'slack': {'slack_channel': 'channel', 'slack_user': 'username'},
     }
 
     for channel, mapping in channel_mapping.items():

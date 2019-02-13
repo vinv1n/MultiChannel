@@ -4,12 +4,19 @@ import requests
 import argparse
 import logging
 import json
+import random, string
 
 URL = 'http://127.0.0.1:5000/api'
+
+def randomname(length):
+   chars = string.ascii_lowercase
+   return ''.join(random.choice(chars) for i in range(length))
+
 
 class get_user_test(unittest.TestCase):
 
     def setUp(self):
+        print("----------Running get_user_test----------")
         headers = {"Content-type": "application/json"}
         data = {"username": "admin", "password": "admin"}
         login_response = requests.post(URL+"/user-login", headers=headers, data=json.dumps(data))
@@ -41,6 +48,7 @@ class get_user_test(unittest.TestCase):
 class delete_user_test(unittest.TestCase):
 
     def setUp(self):
+        print("----------Running delete_users_test----------")
         headers = {"Content-type": "application/json"}
         data = {"username": "admin", "password": "admin"}
         login_response = requests.post(URL+"/user-login", headers=headers, data=json.dumps(data))
@@ -48,23 +56,19 @@ class delete_user_test(unittest.TestCase):
         self.auth_cookies={"access_token_cookie":login_response.cookies.get("access_token_cookie"),
         "refresh_token_cookie":login_response.cookies.get("refresh_token_cookie")}
       
+        headers = {"Content-Type": "application/json",}
         data = {
-                "username":"userdelete",
-                "password":"Testpassword",
+                "username": randomname(10),
+                "password":"password",
                 "preferred_channel":"email",
                 "channels":{ 
                         "email": {
-                            "address":"test@test.test"},
-                        "facebook": {
-                            "user_id": "test"},
+                            "address":"test@testi.testi"},
                         "telegram": {
-                            "user_id": "test"},
+                            "user_id": "testi"},
                         "irc": {
-                            "nickname":"test",
-                            "network":"testnetwork"},
-                        "slack": {
-                            "username":"test",
-                            "channel":"testchannel"}
+                            "nickname":"testi",
+                            "network":"testi"}
                 }
         }
         response = requests.post(URL+"/users", headers=headers, data=json.dumps(data))
@@ -84,7 +88,6 @@ class delete_user_test(unittest.TestCase):
 
         self.assertEqual(response.status_code, 400)
 
-   
     def test_delete_user(self):
         response = requests.delete(URL+"/users/"+self.user_id, cookies=self.auth_cookies)
         self.assertEqual(response.status_code, 200)
@@ -97,6 +100,7 @@ class delete_user_test(unittest.TestCase):
 class patch_user_test(unittest.TestCase):
 
     def setUp(self):
+        print("----------Running patch_users_test----------")
         headers = {"Content-type": "application/json"}
         data = {"username": "admin", "password": "admin"}
         login_response = requests.post(URL+"/user-login", headers=headers, data=json.dumps(data))
@@ -125,25 +129,19 @@ class patch_user_test(unittest.TestCase):
     def test_patch_user_fail_username(self):
         headers = {"Content-type": "application/json"}
         data = {
-                "username":"userdelete",
-                "password":"admin",
+                "username": randomname(10),
+                "password":"password",
                 "preferred_channel":"email",
                 "channels":{ 
                         "email": {
-                            "address":"test@test.test"},
-                        "facebook": {
-                            "user_id": "test"},
+                            "address":"test@testi.testi"},
                         "telegram": {
-                            "user_id": "test"},
+                            "user_id": "testi"},
                         "irc": {
-                            "nickname":"test",
-                            "network":"testnetwork"},
-                        "slack": {
-                            "username":"test",
-                            "channel":"testchannel"}
+                            "nickname":"testi",
+                            "network":"testi"}
                 }
         }
-
         response = requests.patch(URL+"/users/"+self.user_id,headers=headers,data=json.dumps(data),cookies=self.auth_cookies)
 
         self.assertEqual(response.status_code, 400)
@@ -151,25 +149,19 @@ class patch_user_test(unittest.TestCase):
     def test_patch_user_fail_extra(self):
         headers = {"Content-type": "application/json"}
         data = {
-                "extra" : "extra",
-                "password":"admin",
+                "password":"password",
                 "preferred_channel":"email",
                 "channels":{ 
                         "email": {
-                            "address":"test@test.test"},
-                        "facebook": {
-                            "user_id": "test"},
+                            "address":"test@testi.testi"},
                         "telegram": {
-                            "user_id": "test"},
+                            "user_id": "testi"},
                         "irc": {
-                            "nickname":"test",
-                            "network":"testnetwork"},
-                        "slack": {
-                            "username":"test",
-                            "channel":"testchannel"}
+                            "nickname":"testi",
+                            "network":"testi"}
                 }
         }
-
+        data['extra'] = 'extra'
         response = requests.patch(URL+"/users/"+self.user_id,headers=headers,data=json.dumps(data),cookies=self.auth_cookies)
 
         self.assertEqual(response.status_code, 400)
@@ -178,23 +170,19 @@ class patch_user_test(unittest.TestCase):
     def test_patch_user_fail_password_short(self):
         headers = {"Content-type": "application/json"}
         data = {
-                "password":"a",
+                "password":"password",
                 "preferred_channel":"email",
                 "channels":{ 
                         "email": {
-                            "address":"test@test.test"},
-                        "facebook": {
-                            "user_id": "test"},
+                            "address":"test@testi.testi"},
                         "telegram": {
-                            "user_id": "test"},
+                            "user_id": "testi"},
                         "irc": {
-                            "nickname":"test",
-                            "network":"testnetwork"},
-                        "slack": {
-                            "username":"test",
-                            "channel":"testchannel"}
+                            "nickname":"testi",
+                            "network":"testi"}
                 }
         }
+        data['password'] = "s"
 
         response = requests.patch(URL+"/users/"+self.user_id,headers=headers,data=json.dumps(data),cookies=self.auth_cookies)
 
@@ -203,23 +191,20 @@ class patch_user_test(unittest.TestCase):
     def test_patch_user_fail_password_long(self):
         headers = {"Content-type": "application/json"}
         data = {
-                "password":"aasdasdasdasdasdasdasdasdasdasdsadsasdasdsasdsadasdsasdasdasdasdasdsadasdasdssadsadasdassds",
+                "password":"password",
                 "preferred_channel":"email",
                 "channels":{ 
                         "email": {
-                            "address":"test@test.test"},
-                        "facebook": {
-                            "user_id": "test"},
+                            "address":"test@testi.testi"},
                         "telegram": {
-                            "user_id": "test"},
+                            "user_id": "testi"},
                         "irc": {
-                            "nickname":"test",
-                            "network":"testnetwork"},
-                        "slack": {
-                            "username":"test",
-                            "channel":"testchannel"}
+                            "nickname":"testi",
+                            "network":"testi"}
                 }
         }
+        data['password'] = "aasdasdasdasdasdasdasdasdasdasdsadsasdasdsasdsadasdsasdasdasdasdasdsadasdasdssadsadasdassds"
+
 
         response = requests.patch(URL+"/users/"+self.user_id,headers=headers,data=json.dumps(data),cookies=self.auth_cookies)
 
@@ -229,23 +214,19 @@ class patch_user_test(unittest.TestCase):
     def test_patch_user_fail_preferred_wrong(self):
         headers = {"Content-type": "application/json"}
         data = {
-                "password":"admin",
-                "preferred_channel":"thisiswrong",
+                "password":"password",
+                "preferred_channel":"email",
                 "channels":{ 
                         "email": {
-                            "address":"test@test.test"},
-                        "facebook": {
-                            "user_id": "test"},
+                            "address":"test@testi.testi"},
                         "telegram": {
-                            "user_id": "test"},
+                            "user_id": "testi"},
                         "irc": {
-                            "nickname":"test",
-                            "network":"testnetwork"},
-                        "slack": {
-                            "username":"test",
-                            "channel":"testchannel"}
+                            "nickname":"testi",
+                            "network":"testi"}
                 }
         }
+        data['preferred_channel'] = "wrong"
 
         response = requests.patch(URL+"/users/"+self.user_id,headers=headers,data=json.dumps(data),cookies=self.auth_cookies)
 
@@ -255,70 +236,41 @@ class patch_user_test(unittest.TestCase):
     def test_patch_user_fail_no_email(self):
         headers = {"Content-type": "application/json"}
         data = {
-                "password":"a",
-                #"preferred_channel":"email",
-                "channels":{ 
-                        "email": {},
-                        "facebook": {
-                            "user_id": "test"},
-                        "telegram": {
-                            "user_id": "test"},
-                        "irc": {
-                            "nickname":"test",
-                            "network":"testnetwork"},
-                        "slack": {
-                            "username":"test",
-                            "channel":"testchannel"}
-                }
-        }
-
-        response = requests.patch(URL+"/users/"+self.user_id,headers=headers,data=json.dumps(data),cookies=self.auth_cookies)
-
-        self.assertEqual(response.status_code, 400)
-
-    def test_patch_user_fail_no_facebook(self):
-        headers = {"Content-type": "application/json"}
-        data = {
-                "password":"admin",
+                "password":"password",
                 "preferred_channel":"email",
                 "channels":{ 
                         "email": {
-                            "address":"test@test.test"},
-                        "facebook": {},
+                            "address":"test@testi.testi"},
                         "telegram": {
-                            "user_id": "test"},
+                            "user_id": "testi"},
                         "irc": {
-                            "nickname":"test",
-                            "network":"testnetwork"},
-                        "slack": {
-                            "username":"test",
-                            "channel":"testchannel"}
+                            "nickname":"testi",
+                            "network":"testi"}
                 }
         }
+        del data['channels']['email']
 
         response = requests.patch(URL+"/users/"+self.user_id,headers=headers,data=json.dumps(data),cookies=self.auth_cookies)
 
         self.assertEqual(response.status_code, 400)
+
 
     def test_patch_user_fail_no_telegram(self):
         headers = {"Content-type": "application/json"}
         data = {
-                "password":"admin",
+                "password":"password",
                 "preferred_channel":"email",
                 "channels":{ 
                         "email": {
-                            "address":"test@test.test"},
-                        "facebook": {
-                            "user_id": "test"},
-                        "telegram": {},
+                            "address":"test@testi.testi"},
+                        "telegram": {
+                            "user_id": "testi"},
                         "irc": {
-                            "nickname":"test",
-                            "network":"testnetwork"},
-                        "slack": {
-                            "username":"test",
-                            "channel":"testchannel"}
+                            "nickname":"testi",
+                            "network":"testi"}
                 }
         }
+        del data['channels']['telegram']
 
         response = requests.patch(URL+"/users/"+self.user_id,headers=headers,data=json.dumps(data),cookies=self.auth_cookies)
 
@@ -327,44 +279,19 @@ class patch_user_test(unittest.TestCase):
     def test_patch_user_fail_no_irc(self):
         headers = {"Content-type": "application/json"}
         data = {
-                "password":"admin",
+                "password":"password",
                 "preferred_channel":"email",
                 "channels":{ 
                         "email": {
-                            "address":"test@test.test"},
-                        "facebook": {
-                            "user_id": "test"},
+                            "address":"test@testi.testi"},
                         "telegram": {
-                            "user_id": "test"},
-                        "irc": {},
-                        "slack": {
-                            "username":"test",
-                            "channel":"testchannel"}
-                }
-        }
-
-        response = requests.patch(URL+"/users/"+self.user_id,headers=headers,data=json.dumps(data),cookies=self.auth_cookies)
-
-        self.assertEqual(response.status_code, 400)
-
-    def test_patch_user_fail_no_slack(self):
-        headers = {"Content-type": "application/json"}
-        data = {
-                "password":"admin",
-                "preferred_channel":"email",
-                "channels":{ 
-                        "email": {
-                            "address":"test@test.test"},
-                        "facebook": {
-                            "user_id": "test"},
-                        "telegram": {
-                            "user_id": "test"},
+                            "user_id": "testi"},
                         "irc": {
-                            "nickname":"test",
-                            "network":"testnetwork"},
-                        "slack": {}
+                            "nickname":"testi",
+                            "network":"testi"}
                 }
         }
+        del data['channels']['irc']
 
         response = requests.patch(URL+"/users/"+self.user_id,headers=headers,data=json.dumps(data),cookies=self.auth_cookies)
 
@@ -377,17 +304,12 @@ class patch_user_test(unittest.TestCase):
                 "preferred_channel":"email",
                 "channels":{ 
                         "email": {
-                            "address":"test@test.test"},
-                        "facebook": {
-                            "user_id": "test"},
+                            "address":"Thishaschanged"},
                         "telegram": {
                             "user_id": "test"},
                         "irc": {
                             "nickname":"test",
                             "network":"testnetwork"},
-                        "slack": {
-                            "username":"test",
-                            "channel":"testchannel"}
                 }
         }
 
@@ -396,7 +318,6 @@ class patch_user_test(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         get_response = requests.get(URL+"/users/"+self.user_id,cookies=self.auth_cookies)
-        self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.json().get("User").get("preferred_channel"), data.get("preferred_channel"))
         self.assertEqual(get_response.json().get("User").get("channels"), data.get("channels"))

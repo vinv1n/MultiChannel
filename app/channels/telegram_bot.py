@@ -2,8 +2,13 @@ import urllib3
 import logging
 import pprint
 import json
+import uuid
+import requests
+import threading
 
-# from tokens import TELEGRAM_TOKEN
+from utils import get_user
+
+UPDATE_INTREVAL = 10 * 60
 
 logger = logging.getLogger(__name__)
 
@@ -17,38 +22,96 @@ BOT_COMMANDS = {
     "get_member_count": "getChatMembersCount"
 }
 
-TELEGRAM_TOKEN = "734503972:AAH_fbUmJRypHS1ynVI9vLPcsyiFU6SgsME"
-
 class Telegram:
 
-    def __init__(self, *args, **kwargs):
-        self.base_url = "https://api.telegram.org/bot{}/".format(TELEGRAM_TOKEN)
+    def __init__(self, database, token):
+
+        if not isinstance(token, str):
+            raise ValueError("Invalid token")
+
+        self.active = {}
+        self.send = {}  # FIXME make database table
+
+        self.token = token
+        self.base_url = "https://api.telegram.org/bot{}/".format(self.token)
 
         # database handler
-        self.database = kwargs.get("database_handler")
+        self.database = database
+        self._update_active()
 
-        # for requests
-        self.http = urllib3.PoolManager()
-
-    def send_message(self, parameters):
+    def send_message(self, message, user, users, info):
         """
         Send message to channels or users
         :param msg: message string
         :param parameters: parameters for query strings
         :return: status code and response body
         """
-        response, status = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
-                                                parameters=parameters)
 
-        return response, status
+        # Updates all active chats
+        self._update_active()
+        recievers = message.get("receivers")
+        msg_id = message.get("_id")
+        message_ = "ID {}: {}".format(msg_id, message.get("message"))
+
+        users = self.database.get_users()
+
+        chat_ids = []
+        for receiver in recievers:
+
+            user = get_user(receiver, users)
+            if not user:
+                continue
+
+            nick = user["channels"]["telegram"]
+            id_ = self.active.get(nick, "")
+            if not id_:
+                logger.critical("Chat for user %s is not active", nick)
+                continue
+
+            chat_ids.append((nick, id_, user.get("_id")))
+
+        responses = []
+        for nick, user, user_id in chat_ids:
+            entry = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
+                                            parameters={"text": message_, "chat_id": self.active.get(nick)})
+            responses.append(entry.json())
+            self.send.update({nick: msg_id, "user_id": user_id})
+
+        return responses
 
     def get_updates(self):
         """
         Get messages that are send to the bot
         :return: response status_code, response body
         """
-        status, response = self._make_request(request_type="GET", command=BOT_COMMANDS.get("updates"))
-        return response, status
+        response = self._make_request(request_type="GET", command=BOT_COMMANDS.get("updates"))
+        result = response.json().get("result")
+        if not result:
+            return {}
+
+        for message in result:
+            msg_ = None
+            try:
+                msg_ = message["message"]["chat"]
+            except (KeyError, TypeError):
+                logger.warning("Message could not be parsed")
+
+            if not msg_:
+                continue
+
+            username = msg_.get("username")
+            answer = msg_.get("text")
+            info = self.send.get(username)
+            if not info:
+                if not self.active.get(username):
+                    self.active[username] = msg_.get("id")
+                return {}
+
+            msg_id = info.get(username)
+            self.database.add_asnwer_to_message(msg_id, info.get("user_id"), answer)
+            self.send.pop(username)
+
+        return response
 
     def _make_request(self, request_type, command, parameters=None):
         """
@@ -58,14 +121,14 @@ class Telegram:
         :param parameters: query string parameters for some endpoints
         :return: response data and response status code
         """
-        if parameters:
-            _url = self._create_query_string(command=command, parameters=parameters)
+        _url = "{}{}?".format(self.base_url, command)
+
+        if request_type.lower() == "post":
+            response = requests.post(_url, data=parameters)
         else:
-            _url = "{}{}".format(self.base_url, command)
+            response = requests.get(_url)
 
-        response = self.http.request(request_type, _url)
-
-        return {response.data}, response.status
+        return response
 
     def get_bot_status(self):
         """
@@ -88,3 +151,29 @@ class Telegram:
 
         query_string += "&".join(querys)
         return query_string
+
+    def _update_active(self):
+        """
+        A way more compex than it needs to be
+
+        TODO: create database table/collection for this
+        """
+        rjson = self.get_updates()
+        if not rjson:
+            return {}
+
+        rjson = rjson.json()
+        results = rjson.get("result")
+
+        entry = {}
+        for message in results:
+            msg = message.get("message")
+            chat = msg["chat"]
+            chat_id = chat.get("id")
+            if chat_id not in self.active.values():
+                if chat.get("type") == "private":
+                    entry[chat.get("username")] = chat_id
+                else:
+                    entry[chat.get("title")] = chat_id
+        if entry:
+            self.active.update(entry)
