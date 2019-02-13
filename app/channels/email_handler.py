@@ -60,11 +60,11 @@ class EmailHandler:
         id_ = message.get("_id")
         for receiver in receivers:
             user = get_user(receiver, users)
-            toaddr = user.get("channels").get("email")
+            toaddr = user.get("channels").get("email").get("address")
             if not toaddr:
                 continue
 
-            if message.message_type == "seen":
+            if message.get("type") == "seen":
                 formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_, seen=True)
             else:
                 formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_)
@@ -128,6 +128,7 @@ class EmailHandler:
         return success
 
     def _format_message(self, receiver, text, message_id, user_id, seen=False):
+
         message = MIMEMultipart("alternative")
 
         # handle the addresses
