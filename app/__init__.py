@@ -135,7 +135,7 @@ def create_app(args):
     api.add_resource(
         Update,
         "/api/channels/update",
-        resource_class_kwargs={'db_handler': db_handler, "channels": channels},
+        resource_class_kwargs={'handler': db_handler, "channels": channels},
     )
 
     logger.info("Init channels is done")

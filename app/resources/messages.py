@@ -25,7 +25,6 @@ class Messages(Resource):
         except Exception as e:
             return False
 
-    
     @jwt_required
     def get(self):
         """
@@ -69,7 +68,6 @@ class Messages(Resource):
             return {"msg": "error with input data:"+ str(error_msg[0])}, 400
 
         if self.check_authorization() == True:
-            
             args = {}
             data = request.get_json()
             args['message'] = data['message']
