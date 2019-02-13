@@ -93,7 +93,6 @@ handler.setLevel(logging.INFO)
 
 logger.addHandler(handler)
 
-
 def create_app(args):
     """
     Creates and configures flask api and app.

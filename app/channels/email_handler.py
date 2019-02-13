@@ -73,7 +73,7 @@ class EmailHandler:
 
         return True
 
-    def get_status(self, message_id):
+    def get_updates(self):
 
         results, data = self.inbox.uid("search", None, "UNSEEN")
         id_list  = data[0].split()
@@ -107,10 +107,18 @@ class EmailHandler:
 
             return ""
 
+        if isinstance(raw_message, bytes):
+            raw_message = raw_message.decode("utf-8")
+
         msg = email.message_from_string(raw_message)
 
         subject = msg.get("subject")
+        if "Multichannel" not in subject:
+            return None
+
         answer = get_body(msg)
+        if not answer:
+            return None
 
         user_id = None
         message_id = None
@@ -120,10 +128,15 @@ class EmailHandler:
         except Exception as e:
             logger.critical("Error during parsing. Error %s", e)
 
-        if not all([message_id, user_id]):
+        if not user_id or not message_id:
             return None
 
-        success = self.db.add_answer_to_message(message_id, user_id, answer)
+        if isinstance(user_id, bytes):
+            user_id = user_id.decode("utf-8")
+        if isinstance(message_id, bytes):
+            message_id = message_id.decode("utf-8")
+
+        success = self.db.add_answer_to_message(message_id=message_id, user_id=user_id, answer=answer)
 
         return success
 

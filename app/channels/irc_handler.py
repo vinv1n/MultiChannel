@@ -62,3 +62,9 @@ class IRC:
             return False
 
         return True
+
+    def get_updates(self):
+        url = "127.0.0.1:8000/messages/"
+        response = requests.get(url=url).json().get("result")
+
+        return response

@@ -108,7 +108,7 @@ class Telegram:
                 return {}
 
             msg_id = info.get(username)
-            self.database.add_asnwer_to_message(msg_id, info.get("user_id"), answer)
+            self.database.add_asnwer_to_message(message_id=msg_id, user_id=info.get("user_id"), answer=answer)
             self.send.pop(username)
 
         return response
