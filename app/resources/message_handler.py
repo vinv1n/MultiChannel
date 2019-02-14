@@ -72,11 +72,12 @@ class Message_handler:
         return message_id, msg
 
     def _set_message_sent_for_users(self, message_id, user_ids):
-        for user_id in user_ids:
-            try:
-                success = self._database_handler.mark_message_seen(message_id, user_id)
-            except Exception as e:
-                log.warning('_set_message_sent_for_users error, skipping user: {}'.format(e))
+        try:
+            successes = self._database_handler.set_message_sent(message_id, user_ids)
+        except Exception as e:
+            log.warning('Could not set sent status for the message: {}'.format(e))
+            return False
+        return successes
 
 
 def form_message(message):

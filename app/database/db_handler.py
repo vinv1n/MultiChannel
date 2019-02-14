@@ -230,10 +230,8 @@ class database_handler:
     def mark_message_seen(self, message_id, user_id):
         """
         Mark the given message seen by the user.
-        Do this only if the message type is 'ack' or 'answer',
-        with other types raise an error.
-        :param string message_id: the ID of the seen message.
-        :param string user_id: the ID of the user who has seen the message.
+        :param string message_id: Message ID which has been seen by the user.
+        :param string user_ids: the ID of the user who has seen the message.
         :return: True if the operation was successful, False otherwise.
         Message sctructure
         message = {
@@ -241,30 +239,37 @@ class database_handler:
             "content": str,
             "sender": str,
             "timestamp": timestamp
-            "sent_to": {
+            "receivers": {
                 user_id: {
                     "seen": bool,
+                    "sent": bool,
                     "answer": str
                 }
             }
         }
         """
 
-        # needs to be decided if user has messages or message have users
-        message = self.database.message_collection.find_one(filter={'_id': message_id})
+        message = self.get_message(message_id)
+        if not message:
+            raise ValueError('Could not find message with id: {}'.format(message_id))
+        receivers_as_dict = message.get("receivers")
+        if not receivers_as_dict:
+            raise ValueError("Message does not have receivers")
 
-        # these could be combined into one
-        # this might bork epicly
-        users_as_dict = message.get("sent_to", "")
-        if not users_as_dict:
-            raise ValueError("Message does not have users")  # better message
-
-        user_status = users_as_dict.get(user_id, None)
+        user_status = receivers_as_dict.get(user_id)
         if not user_status:
-            raise Exception("No such user")
-
+            raise ValueError('Could not find user: {}'.format(user_id))
         user_status['seen'] = True
-        return self.database.message_collection.update_one(filter={"_id": message_id}, update=message).acknowledged
+
+        result = self.database.message_collection.update(
+            {"_id": ObjectId(message_id)},
+            {"$set": {"receivers": receivers_as_dict}}
+        )
+
+        if result["nModified"] > 0:
+            return True
+        else:
+            return False
 
     def add_answer_to_message(self, message_id, user_id, answer):
         """
@@ -275,19 +280,57 @@ class database_handler:
         :param string user_id: the ID of the user who answered the message.
         :return: True if the operation was successful, False otherwise.
         """
+        message = self.get_message(message_id)
+        if not message:
+            raise ValueError('Could not find message with id: {}'.format(message_id))
+        receivers_as_dict = message.get("receivers")
+        if not receivers_as_dict:
+            raise ValueError("Message does not have receivers")
 
-        # needs to be decided if user has messages or message have users
-        message = self.database.message_collection.find_one(filter={'_id': message_id})
-
-        users_as_dict = message.get("sent_to", "")
-        if not users_as_dict:
-            raise ValueError("Message does not have users")  # better message
-
-        user_status = users_as_dict.get(user_id, None)
+        user_status = receivers_as_dict.get(user_id)
         if not user_status:
-            raise Exception("No such user")
-
-        user_status['answer'] = answer
+            raise ValueError('Could not find user: {}'.format(user_id))
         user_status['seen'] = True
+        user_status['answer'] = answer
 
-        return self.database.message_collection.update_one(filter={"_id": message_id}, update=message).acknowledged
+        result = self.database.message_collection.update(
+            {"_id": ObjectId(message_id)},
+            {"$set": {"receivers": receivers_as_dict}}
+        )
+
+        if result["nModified"] > 0:
+            return True
+        else:
+            return False
+
+    def set_message_sent(self, message_id, user_ids):
+        """
+        :param string message_id: the ID of the message.
+        :param list user_ids: the users who the message was sent to.
+        :return: list of all IDs who the operation was succesful with.
+        """
+        message = self.get_message(message_id)
+        if not message:
+            raise ValueError('Could not find message with id: {}'.format(message_id))
+        receivers_as_dict = message.get("receivers")
+        if not receivers_as_dict:
+            raise ValueError("Message does not have receivers")
+
+        successes = list()
+        for user_id in user_ids:
+            user_status = receivers_as_dict.get(user_id)
+            if not user_status:
+                logger.warning('set_message_sent: Could not find user: {}'.format(user_id))
+                continue
+            user_status['sent'] = True
+            successes.append(user_id)
+
+        result = self.database.message_collection.update(
+            {"_id": ObjectId(message_id)},
+            {"$set": {"receivers": receivers_as_dict}}
+        )
+
+        if result["nModified"] > 0:
+            return successes
+        else:
+            return False

@@ -136,5 +136,13 @@ class MessageSeen(Resource):
         When this get message is processed,
         mark the message_id read by user_id.
         """
-        self.db_handler.mark_message_seen(message_id, seen_id)
+        try:
+            result = self.db_handler.mark_message_seen(message_id, seen_id)
+        except Exception as e:
+            return {'msg': 'Error while trying to set the seen status for the user: {}'.format(e)}, 400
+
+        if result:
+            return 200
+        else:
+            {'msg': 'Error while trying to set the seen status for the user: no changes made'}, 400
         # TODO: magic pixel handling
