@@ -44,6 +44,7 @@ class Message_handler:
         message_id = self._database_handler.create_message(message_data=_message)
         if message_id is None:
             return None, None
+        _message['_id'] = message_id
 
         users = self._database_handler.get_users()
         users_who_received_the_message = list()
@@ -59,7 +60,7 @@ class Message_handler:
                 received_message = channel.send_message(message, users_of_channel)
                 users_who_received_the_message = [*users_who_received_the_message, *received_message]
             except Exception as e:
-                log.debug("Message could not be sent via {}. Reason: {}".format(channel_name, e))
+                log.warning("Message could not be sent via {}. Reason: {}".format(channel_name, e))
                 skipped_channels.append(channel_name)
 
         self._set_message_sent_for_users(message_id, users_who_received_the_message)
@@ -70,10 +71,10 @@ class Message_handler:
             msg = "Failed to send the message via channels: {}".format(', '.join(skipped_channels))
         return message_id, msg
 
-    def _set_message_sent_for_users(self, message_id, users):
-        for user in users:
+    def _set_message_sent_for_users(self, message_id, user_ids):
+        for user_id in user_ids:
             try:
-                success = self._database_handler.mark_message_seen(message_id, user.get('_id'))
+                success = self._database_handler.mark_message_seen(message_id, user_id)
             except Exception as e:
                 log.warning('_set_message_sent_for_users error, skipping user: {}'.format(e))
 
