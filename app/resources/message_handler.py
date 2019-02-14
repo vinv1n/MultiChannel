@@ -5,25 +5,19 @@ through different channels to the users.
 The channels are expected to behave as functions.
 The input parameters of a channel function are:
 
+users: a list of users and their information, who have chosen the channel
+as their preferred one.
+message: the message to be sent to the users.
 
-body: The text which is being sent.
-sender: nicname of the sender.
-type: a string describing what type of a message is being sent.
-group_message: boolean value.
-user: the ID of user who the message is being sent to.
-channel_information: a dictionary containing all needed information
-to handle the message sending. This is, for example, the user's email address.
-
-Channel function should return whether the sending was succesful or not.
-
+Channel function should return a list of user IDs who the channel managed to send the message to.
 """
 
 from app.database.db_handler import database_handler
-import json
 import logging
 from utils import Message
 
 log = logging.getLogger(__name__)
+
 
 class Message_handler:
     """
@@ -44,108 +38,45 @@ class Message_handler:
 
         """Send the message to the users using their preferred channels.
         :param dictionary message: New message that is sent.
-        :param list users: List of user IDs who the message is sent to.
-        If sending to a user fails, append it to error_list and return message is chosen accordingly.
         """
-        error_list = []
-        users = message.get('users')
         _message = form_message(message)
         # Insert the newly created message into database
         message_id = self._database_handler.create_message(message_data=_message)
         if message_id is None:
-             return None # Return none, to return {'msg': 'Error. Could not post the message'}, 400
+            return None, None
 
-        user_informations = self._get_user_informations(users)
-        if user_informations == None:
-            return None
-
-        for user_id, information in user_informations.items():
+        users = self._database_handler.get_users()
+        users_who_received_the_message = list()
+        skipped_channels = list()
+        for channel_name, channel in self.channels.items():
+            users_of_channel = [
+                user for user in users
+                if user.get('preferred_channel') == channel_name
+            ]
+            if len(users_of_channel) == 0:
+                continue
             try:
-                preferred_channel = information['preferred_channel']
-                if preferred_channel is None:
-                    error_list.append(user_id)
-                    log.warning("No preferred channel set. Skipping user: %s " %(str(user_id)))
-                    pass
+                received_message = channel.send_message(message, users_of_channel)
+                users_who_received_the_message = [*users_who_received_the_message, *received_message]
             except Exception as e:
-                error_list.append(user_id)
-                pass
+                log.debug("Message could not be sent via {}. Reason: {}".format(channel_name, e))
+                skipped_channels.append(channel_name)
 
-            _information = information['channels']
-            channel_information = _information.get(preferred_channel)
-            #channel_information = information['channels'].get(preferred_channel)
-            if channel_information is None:
-                #Add to id to error_list and skip
-                error_list.append(user_id)
-                log.warning("No channel info set. Skipping user: %s " %(str(user_id)))
-                pass
+        self._set_message_sent_for_users(message_id, users_who_received_the_message)
 
-            try:
-                success = self._send_message_to_user(
-                    message=_message,
-                    user=user_id,
-                    channel=preferred_channel,
-                    channel_information=channel_information,
-                )
-            except Exception as e:
-                log.debug("Message could not be sent. Reason: %s", e) #TODO: Try another channel or default email if not preferred?
-                success = False
-                #Add to id to error_list and skip
-                error_list.append(user_id)
-            if success:
-                self._set_message_sent_for_user(user=user_id)
-
-        if len(error_list) == 0:
-            msg = "Successfully sent to all recipients"
+        if len(skipped_channels) == 0:
+            msg = "Message succesfully sent via all channels"
         else:
-            msg = "Error sending while sending message to users: "+str(error_list)
+            msg = "Failed to send the message via channels: {}".format(', '.join(skipped_channels))
         return message_id, msg
 
-    def _get_user_informations(self, users):
-        """
-        :param list users: list of user IDs whose information is retrieved
-        :return: Dictionary with user ID as key, and their info as value.
-                 Value is none, if no information was retrieved for that ID.
-        """
-        user_informations = dict()
+    def _set_message_sent_for_users(self, message_id, users):
         for user in users:
-            information = self._database_handler.get_user(user_id=user)
-            user_informations[user] = information
+            try:
+                success = self._database_handler.mark_message_seen(message_id, user.get('_id'))
+            except Exception as e:
+                log.warning('_set_message_sent_for_users error, skipping user: {}'.format(e))
 
-        return user_informations
-
-    def _send_message_to_user(self, message, user, channel, channel_information):
-        """
-        Send the message to the user through the given channel.
-        :param dictionary message: Message
-        :param string user: the ID of the user.
-        :param string channel: Name of the channel which is used.
-        :param dictionary channel_information: Channel related information of the user.
-        :return: True if sending was succesful, False otherwise.
-        """
-        channel = self.channels.get(channel)
-        if channel is None:
-            # TODO: what is the correct reaction when the channel doesn't exist? 
-            # My take is to return, and log the fail to the error_list as this is a user configuration issue.
-            return
-        message_type = message.get('type')
-        if message_type is None:
-            # TODO: handle missing type
-            # This should be checked when posting the message.
-            return
-        body = message.get('body')
-        group_message = message.get('group_message')
-
-        # let's make less queries
-        users = self._database_handler.get_users()
-
-        # FIXME now sending messages only to itself
-        success = channel.send_message(message, user, users, channel_information)
-        return success
-
-    def _set_message_sent_for_user(self, user):
-        # TODO: this, use the database_handler
-        # This needs a patch for the posted message, or send before and append information before saving to database. (less resource intensive)
-        pass
 
 def form_message(message):
     receivers = dict()
