@@ -55,7 +55,7 @@ class EmailHandler:
     def _quit(self):
         self.server.quit()
 
-    def send_message(self, message, user, users, info):
+    def send_message(self, message, users):
         receivers = message.get("receivers")
         id_ = message.get("_id")
 
