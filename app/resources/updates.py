@@ -15,27 +15,31 @@ class Update(Resource):
     def __init__(self, handler, channels):
         self.database = handler
         self.channels = channels
+        self.active = []
 
     def get(self):
-        thread = threading.Thread(target=self._update, kwargs={"database": self.database, "channels": self.channels})
+        thread = threading.Thread(target=self._update, kwargs={"channels": self.channels})
         thread.start()
+        return 200
 
     @staticmethod
     def _update(*args, **kwargs):
-        database, channels = kwargs.values()
+        channels = args[0]
+        if not isinstance(channels, set):
+            return None
 
-        for func in channels.items():
-            result = None
+        results = {}
+        for name, func in channels.items():
             try:
-                result = func()
+                success = func.get_updates()
+                if not success:
+                    results.update({name: False})
+                else:
+                    results.update({name: True})
             except Exception as e:
-                logger.critical("Error during update. Error %s", e)
+                results.update({name: False})
+                logger.critical("Error during update. Error %s  in %s", e, func.__class__)
                 continue
 
-            if result:
-                try:
-                    # TODO correct function
-                    database.mark_message_seen(result)
-                except Exception as e:
-                    logger.warning("Result could not be inserted to database %s", e)
-                    continue
+            results.update({name: True})
+        return results, 200

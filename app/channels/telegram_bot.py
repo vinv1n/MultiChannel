@@ -70,14 +70,17 @@ class Telegram:
 
             chat_ids.append((nick, id_, user.get("_id")))
 
-        responses = []
+        results = []
         for nick, user, user_id in chat_ids:
             entry = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
                                             parameters={"text": message_, "chat_id": self.active.get(nick)})
-            responses.append(entry.json())
+            if entry.status_code != 200:
+                continue
+
+            results.append(user_id)
             self.send.update({nick: msg_id, "user_id": user_id})
 
-        return responses
+        return results
 
     def get_updates(self):
         """
@@ -108,7 +111,7 @@ class Telegram:
                 return {}
 
             msg_id = info.get(username)
-            self.database.add_asnwer_to_message(msg_id, info.get("user_id"), answer)
+            self.database.add_asnwer_to_message(message_id=msg_id, user_id=info.get("user_id"), answer=answer)
             self.send.pop(username)
 
         return response

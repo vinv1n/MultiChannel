@@ -93,7 +93,6 @@ handler.setLevel(logging.INFO)
 
 logger.addHandler(handler)
 
-
 def create_app(args):
     """
     Creates and configures flask api and app.
@@ -187,7 +186,7 @@ def create_app(args):
     api.add_resource(
         Update,
         "/api/channels/update",
-        resource_class_kwargs={'db_handler': db_handler, "channels": channels},
+        resource_class_kwargs={'handler': db_handler, "channels": channels},
     )
 
     logger.info("Init channels is done")

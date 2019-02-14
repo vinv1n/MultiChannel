@@ -56,7 +56,6 @@ class Messages(Resource):
             return {"msg": "error with input data:" + str(error_msg[0])}, 400
 
         if self.check_authorization() is True:
-
             args = {}
             data = request.get_json()
             args['message'] = data['message']
