@@ -1,10 +1,10 @@
-import json
 import logging
 
 from app.database.db import Mongo
 from bson.objectid import ObjectId
 
 logger = logging.getLogger(__name__)
+
 
 class database_handler:
     """
@@ -21,14 +21,13 @@ class database_handler:
         else:
             self.database = Mongo("multichannel")
 
-
     def get_users(self):
         """
-        :return: list of user IDs.
+        :return: list of users and their data.
         """
         try:
             envelope = []
-            cursor =  self.database.user_collection.find({ })
+            cursor = self.database.user_collection.find({ })
 
             for item in cursor:
                 user = {}
@@ -55,8 +54,8 @@ class database_handler:
         """
 
         try:
-            cursor =  self.database.user_collection.find({'_id': ObjectId(user_id)})
-            
+            cursor = self.database.user_collection.find({'_id': ObjectId(user_id)})
+
             if cursor.count() == 0:
                 return None
 
@@ -70,7 +69,7 @@ class database_handler:
                     else:
                         user[key] = item[key]
                 break
-                
+
             return user
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
@@ -84,11 +83,11 @@ class database_handler:
         :return: the user data as a dictionary.
         """
         try:
-            cursor =  self.database.user_collection.find({'username': username})
-            
+            cursor = self.database.user_collection.find({'username': username})
+
             if cursor.count() == 0:
                 return None
-            
+
             for item in cursor:
                 user = {}
                 for key in item:
@@ -97,7 +96,7 @@ class database_handler:
                     else:
                         user[key] = item[key]
                 break
-                
+
             return user
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
@@ -133,8 +132,8 @@ class database_handler:
 
         try:
             result = self.database.user_collection.update(
-                {"_id": ObjectId(user_id)}, 
-                {"$set":user_info}
+                {"_id": ObjectId(user_id)},
+                {"$set": user_info}
                 )
             if result["nModified"] > 0:
                 return 200
@@ -143,7 +142,6 @@ class database_handler:
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
             return None
-
 
     def delete_user(self, user_id):
         """
@@ -164,15 +162,15 @@ class database_handler:
         :return: list of message IDs.
         """
         try:
-            data =  self.database.message_collection.find({ })
+            data = self.database.message_collection.find({})
             envelope = []
             for item in data:
                 message = {}
                 for key in item:
                     if key == "_id":
-                        message.update({ key : str(item[key]) })
+                        message.update({key: str(item[key])})
                     else:
-                        message.update({ key : item[key] })
+                        message.update({key: item[key]})
                 envelope.append(message)
             return envelope
         except Exception as e:
@@ -187,14 +185,14 @@ class database_handler:
         :return: the message data as a dictionary."""
 
         try:
-            cursor =  self.database.message_collection.find({'_id': ObjectId(message_id)})
+            cursor = self.database.message_collection.find({'_id': ObjectId(message_id)})
             message = {}
             for item in cursor:
                 for key in item:
                     if key == "_id":
-                        message.update({ key : str(item[key]) })
+                        message.update({key: str(item[key])})
                     else:
-                        message.update({ key : item[key] })
+                        message.update({key: item[key]})
             return message
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
@@ -277,7 +275,7 @@ class database_handler:
         :param string user_id: the ID of the user who answered the message.
         :return: True if the operation was successful, False otherwise.
         """
-        
+
         # needs to be decided if user has messages or message have users
         message = self.database.message_collection.find_one(filter={'_id': message_id})
 
