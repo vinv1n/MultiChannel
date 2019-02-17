@@ -39,7 +39,7 @@ class Telegram:
         self.database = database
         self._update_active()
 
-    def send_message(self, message, user, users, info):
+    def send_message(self, message, users):
         """
         Send message to channels or users
         :param msg: message string
@@ -49,31 +49,34 @@ class Telegram:
 
         # Updates all active chats
         self._update_active()
-        recievers = message.get("receivers")
         msg_id = message.get("_id")
         message_ = "ID {}: {}".format(msg_id, message.get("message"))
 
         users = self.database.get_users()
 
         chat_ids = []
-        for receiver in recievers:
-
-            user = get_user(receiver, users)
-            if not user:
-                continue
+        for user in users:
 
             nick = user["channels"]["telegram"]
-            id_ = self.active.get(nick, "")
-            if not id_:
+            tg_id = self.active.get(nick, "")
+            if not tg_id:
                 logger.critical("Chat for user %s is not active", nick)
                 continue
 
-            chat_ids.append((nick, id_, user.get("_id")))
+            chat_ids.append((nick, tg_id, user.get("_id")))
 
         results = []
-        for nick, user, user_id in chat_ids:
-            entry = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
-                                            parameters={"text": message_, "chat_id": self.active.get(nick)})
+        for nick, tg_user, user_id in chat_ids:
+            entry = None
+            try:
+                entry = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
+                                            parameters={"text": message_, "chat_id": tg_user})
+            except Exception as e:
+                logger.warning("Message could not be send. Reason %s", e)
+
+            if not entry:
+                continue
+
             if entry.status_code != 200:
                 continue
 
