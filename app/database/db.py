@@ -20,7 +20,6 @@ class Mongo:
         #Default collections
         self.user_collection = None
         self.message_collection = None
-        self.telegram_chat_ids = None
 
         self.database = self._create_database(database_name)
         if self.database is None:
@@ -46,23 +45,22 @@ class Mongo:
     def _create_default_collections(self):
         self.user_collection = self.database['users']
         self.message_collection = self.database['messages']
-        self.telegram_chat_ids = self.database['telegram_ids']
 
     def _create_admin(self):
         admin_data = {
-            "username": "admin",
-            "password": pbkdf2_sha256.encrypt(saslprep("admin")),
-            "admin" : True,
-            "preferred_channel": "email",
-            "channels": {
-                "email": {"address": "adderss@server.fi"},
-                "facebook": {"user_id": "user"},
-                "telegram": {"user_id": "user"},
-                "irc": {"nickname": "user", "network": "user"},
-                "slack": {"channel": "user","username": "user"}
+"username": "admin",
+"password": pbkdf2_sha256.encrypt(saslprep("admin")),
+"admin" : True,
+"preferred_channel": "email",
+"channels": {
+            "email": {"address": "adderss@server.fi"},
+            "facebook": {"user_id": "user"},
+            "telegram": {"user_id": "user"},
+            "irc": {"nickname": "user", "network": "user"},
+            "slack": {"channel": "user","username": "user"}
            }
-        }
-
+}
+        
         cursor =  self.user_collection.find({'username': 'admin'})
         if cursor.count() == 0:
             self.user_collection.insert_one(admin_data)
