@@ -53,20 +53,16 @@ class Telegram:
         message_ = "ID {}: {}".format(msg_id, message.get("message"))
 
         users = self.database.get_users()
-
-        chat_ids = []
-        for user in users:
-
-            nick = user["channels"]["telegram"]
-            tg_id = self.active.get(nick, "")
-            if not tg_id:
-                logger.critical("Chat for user %s is not active", nick)
-                continue
-
-            chat_ids.append((nick, tg_id, user.get("_id")))
+        chat_ids = self.database.get_telegram_users()
 
         results = []
-        for nick, tg_user, user_id in chat_ids:
+        for user in users:
+            nick = user.get("channels").get("telegram").get("user_id")
+            user_id = user.get("_id")
+            tg_user = chat_ids.get(nick)
+            if not tg_user:
+                continue
+
             entry = None
             try:
                 entry = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
