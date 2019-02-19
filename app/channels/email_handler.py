@@ -55,21 +55,17 @@ class EmailHandler:
     def _quit(self):
         self.server.quit()
 
-    def send_message(self, message, user, users, info):
-        receivers = message.get("receivers")
+    def send_message(self, message, users):
         id_ = message.get("_id")
 
         results = []
-        for receiver in receivers:
-            user = get_user(receiver, users)
+        for user in users:
             toaddr = user.get("channels").get("email").get("address")
             if not toaddr:
                 continue
 
-            if message.get("type") == "seen":
-                formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_, seen=True)
-            else:
-                formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_)
+            _seen = message.get("type") == "seen"
+            formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_, seen=_seen)
 
             success = False
             try:
@@ -81,7 +77,7 @@ class EmailHandler:
             if not success:
                 continue
 
-            results.append(receiver)
+            results.append(user.get("_id"))
 
         return results
 

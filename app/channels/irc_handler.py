@@ -12,7 +12,7 @@ class IRC:
     def __init__(self, database):
         self.db = database
 
-    def send_message(self, message, user, users, info):
+    def send_message(self, message, users):
         """
         :param message: instance of message class
         :return: True if message was send succesfully, otherwise False
@@ -21,12 +21,10 @@ class IRC:
         # TODO hide this
         # url to irc endpoint
         url = "127.0.0.1:8000/send/"
-        rc = message.get("receivers")
 
         results = []
-        for user in rc:
-            user_info = get_user(user, users)
-            nick = user_info.get("channels").get("irc").get("nickname")
+        for user in users:
+            nick = user.get("channels").get("irc").get("nickname")
             if not nick:
                 continue
 
@@ -65,6 +63,22 @@ class IRC:
 
     def get_updates(self):
         url = "127.0.0.1:8000/messages/"
-        response = requests.get(url=url).json().get("result")
+        responses = requests.get(url=url).json().get("result")
+        users = self.db.get_users()
+        for response in responses:
+            irc_nick = response.get(user)
+            if not user:
+                continue
 
-        return response
+            answer = response.get("message")
+            results = []
+            for user in users:
+                nick = user.get("channels").get("irc").get("nickname")
+                if nick == irc_nick:
+                    user_id = user.get("_id")
+                    message_id = response.get("message_id")
+                    self.db.add_answer_to_message(message_id, user_id, answer)
+
+                    results.append(user)
+
+        return results
