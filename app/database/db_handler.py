@@ -1,10 +1,10 @@
-import json
 import logging
 
 from app.database.db import Mongo
 from bson.objectid import ObjectId
 
 logger = logging.getLogger(__name__)
+
 
 class database_handler:
     """
@@ -21,14 +21,13 @@ class database_handler:
         else:
             self.database = Mongo("multichannel")
 
-
     def get_users(self):
         """
-        :return: list of user IDs.
+        :return: list of users and their data.
         """
         try:
             envelope = []
-            cursor =  self.database.user_collection.find({ })
+            cursor = self.database.user_collection.find({ })
 
             for item in cursor:
                 user = {}
@@ -55,8 +54,8 @@ class database_handler:
         """
 
         try:
-            cursor =  self.database.user_collection.find({'_id': ObjectId(user_id)})
-            
+            cursor = self.database.user_collection.find({'_id': ObjectId(user_id)})
+
             if cursor.count() == 0:
                 return None
 
@@ -70,7 +69,7 @@ class database_handler:
                     else:
                         user[key] = item[key]
                 break
-                
+
             return user
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
@@ -84,11 +83,11 @@ class database_handler:
         :return: the user data as a dictionary.
         """
         try:
-            cursor =  self.database.user_collection.find({'username': username})
-            
+            cursor = self.database.user_collection.find({'username': username})
+
             if cursor.count() == 0:
                 return None
-            
+
             for item in cursor:
                 user = {}
                 for key in item:
@@ -97,7 +96,7 @@ class database_handler:
                     else:
                         user[key] = item[key]
                 break
-                
+
             return user
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
@@ -133,8 +132,8 @@ class database_handler:
 
         try:
             result = self.database.user_collection.update(
-                {"_id": ObjectId(user_id)}, 
-                {"$set":user_info}
+                {"_id": ObjectId(user_id)},
+                {"$set": user_info}
                 )
             if result["nModified"] > 0:
                 return 200
@@ -143,7 +142,6 @@ class database_handler:
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
             return None
-
 
     def delete_user(self, user_id):
         """
@@ -164,15 +162,15 @@ class database_handler:
         :return: list of message IDs.
         """
         try:
-            data =  self.database.message_collection.find({ })
+            data = self.database.message_collection.find({})
             envelope = []
             for item in data:
                 message = {}
                 for key in item:
                     if key == "_id":
-                        message.update({ key : str(item[key]) })
+                        message.update({key: str(item[key])})
                     else:
-                        message.update({ key : item[key] })
+                        message.update({key: item[key]})
                 envelope.append(message)
             return envelope
         except Exception as e:
@@ -187,14 +185,14 @@ class database_handler:
         :return: the message data as a dictionary."""
 
         try:
-            cursor =  self.database.message_collection.find({'_id': ObjectId(message_id)})
+            cursor = self.database.message_collection.find({'_id': ObjectId(message_id)})
             message = {}
             for item in cursor:
                 for key in item:
                     if key == "_id":
-                        message.update({ key : str(item[key]) })
+                        message.update({key: str(item[key])})
                     else:
-                        message.update({ key : item[key] })
+                        message.update({key: item[key]})
             return message
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
@@ -232,10 +230,8 @@ class database_handler:
     def mark_message_seen(self, message_id, user_id):
         """
         Mark the given message seen by the user.
-        Do this only if the message type is 'ack' or 'answer',
-        with other types raise an error.
-        :param string message_id: the ID of the seen message.
-        :param string user_id: the ID of the user who has seen the message.
+        :param string message_id: Message ID which has been seen by the user.
+        :param string user_ids: the ID of the user who has seen the message.
         :return: True if the operation was successful, False otherwise.
         Message sctructure
         message = {
@@ -243,30 +239,37 @@ class database_handler:
             "content": str,
             "sender": str,
             "timestamp": timestamp
-            "sent_to": {
+            "receivers": {
                 user_id: {
                     "seen": bool,
+                    "sent": bool,
                     "answer": str
                 }
             }
         }
         """
 
-        # needs to be decided if user has messages or message have users
-        message = self.database.message_collection.find_one(filter={'_id': message_id})
+        message = self.get_message(message_id)
+        if not message:
+            raise ValueError('Could not find message with id: {}'.format(message_id))
+        receivers_as_dict = message.get("receivers")
+        if not receivers_as_dict:
+            raise ValueError("Message does not have receivers")
 
-        # these could be combined into one
-        # this might bork epicly
-        users_as_dict = message.get("sent_to", "")
-        if not users_as_dict:
-            raise ValueError("Message does not have users")  # better message
-
-        user_status = users_as_dict.get(user_id, None)
+        user_status = receivers_as_dict.get(user_id)
         if not user_status:
-            raise Exception("No such user")
-
+            raise ValueError('Could not find user: {}'.format(user_id))
         user_status['seen'] = True
-        return self.database.message_collection.update_one(filter={"_id": message_id}, update=message).acknowledged
+
+        result = self.database.message_collection.update(
+            {"_id": ObjectId(message_id)},
+            {"$set": {"receivers": receivers_as_dict}}
+        )
+
+        if result["nModified"] > 0:
+            return True
+        else:
+            return False
 
     def add_answer_to_message(self, message_id, user_id, answer):
         """
@@ -277,19 +280,86 @@ class database_handler:
         :param string user_id: the ID of the user who answered the message.
         :return: True if the operation was successful, False otherwise.
         """
-        
-        # needs to be decided if user has messages or message have users
-        message = self.database.message_collection.find_one(filter={'_id': message_id})
+        message = self.get_message(message_id)
+        if not message:
+            raise ValueError('Could not find message with id: {}'.format(message_id))
+        receivers_as_dict = message.get("receivers")
+        if not receivers_as_dict:
+            raise ValueError("Message does not have receivers")
 
-        users_as_dict = message.get("sent_to", "")
-        if not users_as_dict:
-            raise ValueError("Message does not have users")  # better message
-
-        user_status = users_as_dict.get(user_id, None)
+        user_status = receivers_as_dict.get(user_id)
         if not user_status:
-            raise Exception("No such user")
-
-        user_status['answer'] = answer
+            raise ValueError('Could not find user: {}'.format(user_id))
         user_status['seen'] = True
+        user_status['answer'] = answer
 
-        return self.database.message_collection.update_one(filter={"_id": message_id}, update=message).acknowledged
+        result = self.database.message_collection.update(
+            {"_id": ObjectId(message_id)},
+            {"$set": {"receivers": receivers_as_dict}}
+        )
+
+        if result["nModified"] > 0:
+            return True
+        else:
+            return False
+
+    def set_message_sent(self, message_id, user_ids):
+        """
+        :param string message_id: the ID of the message.
+        :param list user_ids: the users who the message was sent to.
+        :return: list of all IDs who the operation was succesful with.
+        """
+        message = self.get_message(message_id)
+        if not message:
+            raise ValueError('Could not find message with id: {}'.format(message_id))
+        receivers_as_dict = message.get("receivers")
+        if not receivers_as_dict:
+            raise ValueError("Message does not have receivers")
+
+        successes = list()
+        for user_id in user_ids:
+            user_status = receivers_as_dict.get(user_id)
+            if not user_status:
+                logger.warning('set_message_sent: Could not find user: {}'.format(user_id))
+                continue
+            user_status['sent'] = True
+            successes.append(user_id)
+
+        result = self.database.message_collection.update(
+            {"_id": ObjectId(message_id)},
+            {"$set": {"receivers": receivers_as_dict}}
+        )
+
+        if result["nModified"] > 0:
+            return successes
+        else:
+            return False
+
+    def add_telegram_user(self, username, chat_id):
+        def is_in_db(username, chat_id):
+            check = self.database.telegram_chat_ids.find({username: chat_id})
+            if check.count() > 0:
+                return True
+            return False
+
+        if is_in_db(username, chat_id):
+            logger.warning("User already in database")
+            return None
+
+        result = None
+        try:
+            result = self.database.telegram_chat_ids.insert_one({username: chat_id})
+        except Exception as e:
+            logger.critical("User could not be added. Error %s", e)
+
+        return result
+
+    def get_telegram_users(self):
+        cursor = self.database.telegram_chat_ids.find({ })
+        results = []
+        for user in cursor:
+            entry = {
+                "username": user.get("username")
+            }
+            results.append(entry)
+        return results
