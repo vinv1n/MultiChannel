@@ -57,7 +57,7 @@ class Telegram:
 
         results = []
         for user in users:
-            nick = user.get("channels").get("telegram").get("user_id")
+            nick = user.get("channels").get("telegram")
             user_id = user.get("_id")
             tg_user = chat_ids.get(nick)
             if not tg_user:
