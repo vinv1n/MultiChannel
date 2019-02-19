@@ -293,3 +293,32 @@ class database_handler:
         user_status['seen'] = True
 
         return self.database.message_collection.update_one(filter={"_id": message_id}, update=message).acknowledged
+
+    def add_telegram_user(self, username, chat_id):
+        def is_in_db(username, chat_id):
+            check = self.database.telegram_chat_ids.find({username: chat_id})
+            if check.count() > 0:
+                return True
+            return False
+
+        if is_in_db(username, chat_id):
+            logger.warning("User already in database")
+            return None
+
+        result = None
+        try:
+            result = self.database.telegram_chat_ids.insert_one({username: chat_id})
+        except Exception as e:
+            logger.critical("User could not be added. Error %s", e)
+
+        return result
+
+    def get_telegram_users(self):
+        cursor = self.database.telegram_chat_ids.find({ })
+        results = []
+        for user in cursor:
+            entry = {
+                "username": user.get("username")
+            }
+            results.append(entry)
+        return results
