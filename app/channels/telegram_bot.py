@@ -53,20 +53,16 @@ class Telegram:
         message_ = "ID {}: {}".format(msg_id, message.get("message"))
 
         users = self.database.get_users()
-
-        chat_ids = []
-        for user in users:
-
-            nick = user["channels"]["telegram"]
-            tg_id = self.active.get(nick, "")
-            if not tg_id:
-                logger.critical("Chat for user %s is not active", nick)
-                continue
-
-            chat_ids.append((nick, tg_id, user.get("_id")))
+        chat_ids = self.database.get_telegram_users()
 
         results = []
-        for nick, tg_user, user_id in chat_ids:
+        for user in users:
+            nick = user.get("channels").get("telegram")
+            user_id = user.get("_id")
+            tg_user = chat_ids.get(nick)
+            if not tg_user:
+                continue
+
             entry = None
             try:
                 entry = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
@@ -161,7 +157,6 @@ class Telegram:
     def _update_active(self):
         """
         A way more compex than it needs to be
-
         TODO: create database table/collection for this
         """
         rjson = self.get_updates()
@@ -171,15 +166,17 @@ class Telegram:
         rjson = rjson.json()
         results = rjson.get("result")
 
-        entry = {}
         for message in results:
             msg = message.get("message")
             chat = msg["chat"]
             chat_id = chat.get("id")
             if chat_id not in self.active.values():
                 if chat.get("type") == "private":
-                    entry[chat.get("username")] = chat_id
+                    username = chat.get("username")
                 else:
-                    entry[chat.get("title")] = chat_id
-        if entry:
-            self.active.update(entry)
+                    username = chat.get("title")
+
+                if not username:
+                    continue
+
+                self.database.add_telegram_user(username, chat_id)
