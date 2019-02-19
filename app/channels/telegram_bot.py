@@ -168,15 +168,17 @@ class Telegram:
         rjson = rjson.json()
         results = rjson.get("result")
 
-        entry = {}
         for message in results:
             msg = message.get("message")
             chat = msg["chat"]
             chat_id = chat.get("id")
             if chat_id not in self.active.values():
                 if chat.get("type") == "private":
-                    entry[chat.get("username")] = chat_id
+                    username = chat.get("username")
                 else:
-                    entry[chat.get("title")] = chat_id
-        if entry:
-            self.active.update(entry)
+                    username = chat.get("title")
+
+                if not username:
+                    continue
+
+                self.database.add_telegram_user(username, chat_id)
