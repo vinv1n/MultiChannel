@@ -57,7 +57,7 @@ class Message_handler:
             if len(users_of_channel) == 0:
                 continue
             try:
-                received_message = channel.send_message(message, users_of_channel)
+                received_message = channel.send_message(_message, users_of_channel)
                 users_who_received_the_message = [*users_who_received_the_message, *received_message]
             except Exception as e:
                 log.warning("Message could not be sent via {}. Reason: {}".format(channel_name, e))

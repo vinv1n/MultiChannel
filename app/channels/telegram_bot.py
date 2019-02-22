@@ -52,19 +52,15 @@ class Telegram:
         msg_id = message.get("_id")
         message_ = "ID {}: {}".format(msg_id, message.get("message"))
 
-        users = self.database.get_users()
-
         chat_ids = []
         for user in users:
 
-            nick = user["channels"]["telegram"]
+            nick = user["channels"]["telegram"]["user_id"]
             tg_id = self.active.get(nick, "")
             if not tg_id:
                 logger.critical("Chat for user %s is not active", nick)
                 continue
-
             chat_ids.append((nick, tg_id, user.get("_id")))
-
         results = []
         for nick, tg_user, user_id in chat_ids:
             entry = None
