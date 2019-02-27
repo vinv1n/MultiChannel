@@ -1,12 +1,7 @@
-import urllib3
 import logging
-import pprint
-import json
-import uuid
 import requests
-import threading
+from collections import defaultdict
 
-from utils import get_user
 
 UPDATE_INTREVAL = 10 * 60
 
@@ -22,6 +17,12 @@ BOT_COMMANDS = {
     "get_member_count": "getChatMembersCount"
 }
 
+HELP_TEXT = {
+    "answerable": "(Reply to this post to answer back) ",
+    "traced": "(Reply to this post to mark message seen) ",
+}
+
+
 class Telegram:
 
     def __init__(self, database, token):
@@ -30,7 +31,7 @@ class Telegram:
             raise ValueError("Invalid token")
 
         self.active = {}
-        self.send = {}  # FIXME make database table
+        self.send = defaultdict(dict)
 
         self.token = token
         self.base_url = "https://api.telegram.org/bot{}/".format(self.token)
@@ -50,11 +51,12 @@ class Telegram:
         # Updates all active chats
         self._update_active()
         msg_id = message.get("_id")
-        message_ = "ID {}: {}".format(msg_id, message.get("message"))
-
+        msg_type = message.get('type')
+        _help_text = HELP_TEXT.get(msg_type, "")
+        message_ = "{}{}".format(_help_text, message.get("message"))
         chat_ids = []
-        for user in users:
 
+        for user in users:
             nick = user["channels"]["telegram"]["user_id"]
             tg_id = self.active.get(nick, "")
             if not tg_id:
@@ -62,11 +64,15 @@ class Telegram:
                 continue
             chat_ids.append((nick, tg_id, user.get("_id")))
         results = []
+
         for nick, tg_user, user_id in chat_ids:
             entry = None
             try:
-                entry = self._make_request(request_type="POST", command=BOT_COMMANDS.get("send_message"),
-                                            parameters={"text": message_, "chat_id": tg_user})
+                entry = self._make_request(
+                    request_type="POST",
+                    command=BOT_COMMANDS.get("send_message"),
+                    parameters={"text": message_, "chat_id": tg_user}
+                )
             except Exception as e:
                 logger.warning("Message could not be send. Reason %s", e)
 
@@ -76,8 +82,13 @@ class Telegram:
             if entry.status_code != 200:
                 continue
 
+            telegram_message_id = entry.json().get('result', {}).get('message_id')
             results.append(user_id)
-            self.send.update({nick: msg_id, "user_id": user_id})
+
+            if msg_type == "fnf":
+                continue
+
+            self.send[telegram_message_id][nick] = {"msg_id": msg_id, "user_id": user_id, "msg_type": msg_type}
 
         return results
 
@@ -102,17 +113,28 @@ class Telegram:
                 continue
 
             username = msg_.get("username")
-            answer = msg_.get("text")
-            info = self.send.get(username)
-            if not info:
-                if not self.active.get(username):
-                    self.active[username] = msg_.get("id")
-                return {}
+            answer = message.get("message").get("text")
 
-            msg_id = info.get(username)
-            self.database.add_asnwer_to_message(message_id=msg_id, user_id=info.get("user_id"), answer=answer)
-            self.send.pop(username)
+            reply_to_message = message.get("message").get("reply_to_message")
+            if not reply_to_message:
+                continue
 
+            _message_id = reply_to_message.get("message_id")
+            _users = self.send.get(_message_id, {})
+            if username not in _users:
+                continue
+
+            info = self.send[_message_id].pop(username)
+            msg_id = info.get("msg_id")
+            user_id = info.get("user_id")
+            msg_type = info.get("msg_type")
+
+            if msg_type == "answerable":
+                self.database.add_answer_to_message(message_id=msg_id, user_id=user_id, answer=answer)
+            elif msg_type == "traced":
+                self.database.mark_message_seen(message_id=msg_id, user_id=user_id)
+            else:
+                continue
         return response
 
     def _make_request(self, request_type, command, parameters=None):
