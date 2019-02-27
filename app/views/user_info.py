@@ -81,8 +81,6 @@ def _user_info_page(response, user_id):
         'pref_{}'.format(preferred_channel): 'checked',
     }
 
-    logger.warning(user_information_kwargs)
-
     return render_template(
         'user_info.html',
         **user_information_kwargs,
