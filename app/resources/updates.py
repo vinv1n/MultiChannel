@@ -24,9 +24,10 @@ class Update(Resource):
 
     @staticmethod
     def _update(*args, **kwargs):
-        channels = args[0]
-        if not isinstance(channels, set):
-            return None
+        if args:
+            channels = args[0]
+        else:
+            channels = kwargs.get('channels', dict())
 
         results = {}
         for name, func in channels.items():
