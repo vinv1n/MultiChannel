@@ -3,7 +3,6 @@ import logging
 import imaplib
 import email
 import os
-import threading
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -63,9 +62,9 @@ class EmailHandler:
             toaddr = user.get("channels").get("email").get("address")
             if not toaddr:
                 continue
-
-            _seen = message.get("type") == "seen"
-            formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=id_, seen=_seen)
+            user_id = user.get("_id")
+            _seen = message.get("type") == "traced"
+            formatted_message = self._format_message(toaddr, text=message.get("message"), message_id=id_, user_id=user_id, seen=_seen)
 
             success = False
             try:
@@ -82,17 +81,14 @@ class EmailHandler:
         return results
 
     def get_updates(self):
-
         results, data = self.inbox.uid("search", None, "UNSEEN")
         id_list  = data[0].split()
-
         results = []
         for id_ in id_list:
             res, message = self.inbox.uid("fetch", id_, "(RFC822)")
             raw_message = message[0][1]
             parsed_email = self._parse_raw_email(raw_message)
             results.append(parsed_email)
-
         if not results:
             return None
 
@@ -128,11 +124,25 @@ class EmailHandler:
         if not answer:
             return None
 
+        # Quick parse to remove the quote part as well as possible
+        try:
+            answer = [
+                l for l in answer.splitlines()
+                if not l.startswith('>') and self.user not in l and l
+            ]
+            answer = answer[:-1] if answer[-1].endswith(':') else answer
+            answer = "\n".join(answer)
+        except Exception as e:
+            logger.warning("Could not clean up the answer.")
+            answer = get_body(msg)
+
         user_id = None
         message_id = None
         try:
-            user_id = subject.split()[1]
-            message_id = subject.split()[2]
+            subject = subject[3:].strip() if subject.lower().startswith("re:") else subject.strip()
+            # subject.split()[0] is multichannel-text
+            message_id = subject.split()[1]
+            user_id = subject.split()[2]
         except Exception as e:
             logger.critical("Error during parsing. Error %s", e)
 
@@ -144,7 +154,10 @@ class EmailHandler:
         if isinstance(message_id, bytes):
             message_id = message_id.decode("utf-8")
 
-        success = self.db.add_answer_to_message(message_id=message_id, user_id=user_id, answer=answer)
+        try:
+            success = self.db.add_answer_to_message(message_id=message_id, user_id=user_id, answer=answer)
+        except Exception as e:
+            return None
 
         return success
 
