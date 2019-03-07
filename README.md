@@ -21,3 +21,15 @@
    ### activate env `source <env_name>/bin/activate`
    ### install requirements `pip install -r requirements.txt`
    ### run project `python run.py` on project root
+
+  ## Set up channel config
+  To set up channel config, edit the config.json file on the root folder of the project.
+  
+  ### Email
+Set the correct SMTP, SMTP port, IMAP, IMAP port, address and password of your email service provider. Please, create a new email account for this program, because the password has to be written into the config file. This might not work with all email providers. Some of the might consider the emails as spam. Gmail is not known to work. Outlook works with the system, but you should remember to verify your account so that Outlook lets you send more than a couple emails.
+
+  ### Telegram
+To set up telegram, create a new bot (https://core.telegram.org/bots) and add the token into config.json. The users should say hello to this bot, so that it can communicate with the user.
+
+As of now, shutting down the MultiChannel App will reset the bot's memory in such a way, that it won't be able to forward user responses to the database. However, all new messages sent after the reset should work.
+  ### IRC
