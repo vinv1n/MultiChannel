@@ -33,3 +33,6 @@ To set up telegram, create a new bot (https://core.telegram.org/bots) and add th
 
 As of now, shutting down the MultiChannel App will reset the bot's memory in such a way, that it won't be able to forward user responses to the database. However, all new messages sent after the reset should work.
   ### IRC
+  To configure IRC channel make sure that you have initialized and updated the IRC submodule. Next go to the config.json inside IRC-bot submodule and setup irc server, bots name and default channels.
+  
+  To respond theirc messages use !response <message_id> message command. You get message id once you receive message otherwise response is not registered. 
