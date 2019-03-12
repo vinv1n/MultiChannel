@@ -114,7 +114,6 @@ class database_handler:
             return "used"
         try:
             result = self.database.user_collection.insert_one(user_data)
-            logger.warning(result.inserted_id)
             return str(result.inserted_id)
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)
