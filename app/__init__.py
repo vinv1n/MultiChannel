@@ -61,14 +61,13 @@ def _init_channels(database):
     def get_channel_config(conf):
         email = config["email"]
         telegram = config["telegram"]
-        irc = config["irc"]
-        return irc, telegram, email
+        return telegram, email
 
     config = load_config()
     if not config:
         raise MultiChannelException("Could not import channels configutations")
 
-    irc, telegram, email = get_channel_config(conf=config)
+    telegram, email = get_channel_config(conf=config)
 
     _channels = {
         "irc": IRC(database),

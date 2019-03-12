@@ -7,6 +7,8 @@ from utils import get_user
 
 logger = logging.getLogger(__name__)
 
+URI = "0.0.0.0:8000"
+
 class IRC:
 
     def __init__(self, database):
@@ -20,7 +22,7 @@ class IRC:
 
         # TODO hide this
         # url to irc endpoint
-        url = "127.0.0.1:8000/send/"
+        url = "{}/{}".format(URI, "send/")
 
         results = []
         for user in users:
@@ -45,7 +47,7 @@ class IRC:
     def get_message(self, message_id):
         # TODO hide this
         # url to irc endpoint
-        url = "127.0.0.1:8000/messages/{}".format(message_id)
+        url = "{}/messages/{}".format(URI, message_id)
 
         response = requests.get(url=url).json().get("result")
 
@@ -62,7 +64,7 @@ class IRC:
         return True
 
     def get_updates(self):
-        url = "127.0.0.1:8000/messages/"
+        url = "{}/{}".format(URI, "messages/")
         responses = requests.get(url=url).json().get("result")
         users = self.db.get_users()
         for response in responses:
