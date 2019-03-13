@@ -35,4 +35,8 @@ As of now, shutting down the MultiChannel App will reset the bot's memory in suc
   ### IRC
   To configure IRC channel make sure that you have initialized and updated the IRC submodule. Next go to the config.json inside IRC-bot submodule and setup irc server, bots name and default channels.
   
-  To respond theirc messages use !response <message_id> message command. You get message id once you receive message otherwise response is not registered. 
+  To respond theirc messages use !response <message_id> message command. You get message id once you receive message otherwise response is not registered.
+  
+  ## Security keys
+  
+  In instance/config.py, put your own secret keys in place of the placeholders.
