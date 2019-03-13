@@ -6,7 +6,8 @@
             "imap": "",
             "imap_port": 0,
             "address": "",
-            "password": ""
+            "password": "",
+	    "flask_server_url": "127.0.0.1:5000"
         },
         "telegram": {
             "token": ""

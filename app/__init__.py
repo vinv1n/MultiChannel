@@ -72,9 +72,13 @@ def _init_channels(database):
     _channels = {
         "irc": IRC(database),
         "telegram": Telegram(token=telegram.get("token"), database=database),
-        "email": EmailHandler(password=email.get("password"), address=email.get("address"),
-                                imap_server=email.get("imap"), host=email.get("smtp"),
-                                port_imap=email.get("imap_port"), port_smtp=email.get("smtp_port"), database=database)
+        "email": EmailHandler(
+            password=email.get("password"), address=email.get("address"),
+            imap_server=email.get("imap"), host=email.get("smtp"),
+            port_imap=email.get("imap_port"), port_smtp=email.get("smtp_port"),
+            database=database,
+            flask_server_url=email.get("flask_server_url")
+        )
     }
     return _channels
 

@@ -206,7 +206,6 @@ class database_handler:
         """
         try:
             result = self.database.message_collection.insert_one(message_data)
-            logger.warning(result.inserted_id)
             return str(result.inserted_id)
         except Exception as e:
             logger.critical("Error during data handling. Error: %s", e)

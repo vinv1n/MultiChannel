@@ -2,11 +2,10 @@ import smtplib
 import logging
 import imaplib
 import email
-import os
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from utils import MultiChannelException, get_user
+from utils import MultiChannelException
 
 
 logger = logging.getLogger(__name__)
@@ -14,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class EmailHandler:
 
-    def __init__(self, password, address, imap_server, database, host=None, port_smtp=587, port_imap=993):
+    def __init__(self, password, address, imap_server, database, flask_server_url, host=None, port_smtp=587, port_imap=993):
 
         if host:
             self.server = smtplib.SMTP(host=host, port=port_smtp)
@@ -34,6 +33,7 @@ class EmailHandler:
         self.inbox = EmailHandler._init_inbox(password, self.imap_server, address, port_imap)
 
         # TODO check if is always needed
+        self.flask_server_url = flask_server_url
         self._login()
 
     @staticmethod
@@ -171,7 +171,12 @@ class EmailHandler:
 
         message['Subject'] = "Multichannel {} {}".format(message_id, user_id)
 
-        html_format = EmailHandler.create_html(text=text, seen=seen)
+        html_format = self.create_html(
+            text=text,
+            seen=seen,
+            message_id=message_id,
+            user_id=user_id,
+        )
         html = MIMEText(html_format, "html")
 
         # TODO check if this is also needed
@@ -183,28 +188,27 @@ class EmailHandler:
         string = message.as_string()
         return string
 
-    @staticmethod
-    def create_html(text, seen=False):
+    def create_html(self, text, message_id, user_id, seen=False):
         # TODO customize html format
-
+        if seen:
+            image_html = "<img src={}>".format(self._get_pixel(message_id, user_id))
+        else:
+            image_html = ""
         body = """ \
         <html>
             <head></head>
             <body>
                 <p>{text}</p>
-                <a href="{image}" download>
+                {image}
             </body>
         </html>
-        """.format(text=text, image=EmailHandler._get_pixel() if seen else "")
+        """.format(text=text, image=image_html)
 
         return body
 
-    @staticmethod
-    def _get_pixel():
-        current = os.getcwd()
-        try:
-            path_to_image = os.path.join(current, "images/pixel.png")
-            return path_to_image
-        except Exception:
-            logger.warning("Image not found")
-            return ""
+    def _get_pixel(self, message_id, user_id):
+        return "http://{server}/api/messages/{message_id}/{user_id}".format(
+            server=self.flask_server_url,
+            message_id=message_id,
+            user_id=user_id,
+        )

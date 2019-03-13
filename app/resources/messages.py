@@ -1,6 +1,7 @@
 import datetime
-from flask import request
-from flask_restful import Resource, reqparse
+
+from flask import request, send_file
+from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from jsonschema import validate
 from app.json_validation_schemas import message_schema
@@ -142,7 +143,7 @@ class MessageSeen(Resource):
             return {'msg': 'Error while trying to set the seen status for the user: {}'.format(e)}, 400
 
         if result:
-            return 200
+            return send_file("channels/images/pixel.png", mimetype="image/png")
         else:
             {'msg': 'Error while trying to set the seen status for the user: no changes made'}, 400
         # TODO: magic pixel handling
